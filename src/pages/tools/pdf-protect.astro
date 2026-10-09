@@ -1,0 +1,493 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+
+const howTo = [
+  {
+    name: "Upload a PDF",
+    text: "Click to choose a PDF file, or drag and drop it onto the drop zone.",
+  },
+  {
+    name: "Set a password",
+    text: "Enter and confirm the password required to open the file. Optionally restrict printing, copying, or editing in the Advanced section.",
+  },
+  {
+    name: "Protect and download",
+    text: "Click Protect & Download to save an encrypted copy of the PDF, unrelated to your original file.",
+  },
+];
+
+const faqs = [
+  {
+    question: "Is my PDF uploaded to a server?",
+    answer:
+      "No. Encryption happens entirely in your browser using a client-side PDF library. Your file and the password you choose never leave your device.",
+  },
+  {
+    question: "What encryption does this use?",
+    answer:
+      "AES-256, the strongest standard PDF encryption method and the one recommended by the current ISO 32000-2 specification. It's supported by all modern PDF readers, including Adobe Acrobat and most browsers' built-in viewers.",
+  },
+  {
+    question: "What happens if I forget the password?",
+    answer:
+      "There is no way to recover it. Since nothing is uploaded or stored, Zipizy has no record of the password you set — losing it means losing access to that encrypted copy, so keep it somewhere safe.",
+  },
+  {
+    question: "What do the Advanced permission restrictions actually do?",
+    answer:
+      "They tell compliant PDF readers to block specific actions (printing, copying, editing) even after the correct password is entered. They rely on the reader software honoring the restriction — they aren't a hard technical barrier, since anyone with editing tools that ignore permissions could bypass them. Use the open password as your real security boundary.",
+  },
+];
+---
+
+<ToolLayout
+  title="PDF Protect — Add a Password to a PDF | Zipizy"
+  description="Add AES-256 password protection to a PDF file, entirely in your browser. Free, private, no sign-up, nothing uploaded."
+  toolName="PDF Protect"
+  intro="Add password protection to a PDF file — free, private, no sign-up required."
+  howTo={howTo}
+  faqs={faqs}
+>
+  <div class="pdf-tool">
+    <label id="protect-drop" for="protect-input" class="drop-zone">
+      <span class="drop-title">
+        Click to add a PDF, or drag and drop it here
+      </span>
+      <span class="drop-sub">One file at a time</span>
+      <input id="protect-input" type="file" accept="application/pdf" hidden />
+    </label>
+
+    <p id="protect-status" class="status" hidden></p>
+
+    <div id="protect-panel" class="panel" hidden>
+      <p class="file-summary" id="protect-file-summary"></p>
+
+      <div class="field">
+        <label class="field-label" for="protect-password">
+          Password
+        </label>
+        <input
+          id="protect-password"
+          type="password"
+          autocomplete="new-password"
+          placeholder="Enter a password"
+        />
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="protect-confirm">
+          Confirm password
+        </label>
+        <input
+          id="protect-confirm"
+          type="password"
+          autocomplete="new-password"
+          placeholder="Re-enter the password"
+        />
+      </div>
+
+      <p id="protect-mismatch" class="status error" hidden>
+        Passwords don't match.
+      </p>
+
+      <details class="advanced">
+        <summary>Advanced: restrict permissions (optional)</summary>
+        <div class="permissions">
+          <label class="checkbox-label">
+            <input type="checkbox" id="perm-printing" checked /> Allow printing
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" id="perm-copying" checked /> Allow copying
+            text/images
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" id="perm-modifying" checked /> Allow editing
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" id="perm-forms" checked /> Allow filling
+            forms
+          </label>
+        </div>
+        <div class="field">
+          <label class="field-label" for="protect-owner-password">
+            Separate permissions password (optional)
+          </label>
+          <input
+            id="protect-owner-password"
+            type="password"
+            autocomplete="new-password"
+            placeholder="Leave blank to use the same password"
+          />
+        </div>
+      </details>
+
+      <div class="actions">
+        <button id="protect-reset" type="button" class="action-btn ghost">
+          Choose a different file
+        </button>
+        <button
+          id="protect-submit"
+          type="button"
+          class="action-btn primary"
+          disabled
+        >
+          Protect &amp; Download
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .pdf-tool {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .drop-zone {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-lg);
+      padding: 2rem 1rem;
+      cursor: pointer;
+      text-align: center;
+      transition:
+        border-color 0.15s ease,
+        background 0.15s ease;
+    }
+
+    .drop-zone:hover,
+    .drop-zone.drag-over {
+      border-color: var(--color-primary);
+      background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+    }
+
+    .drop-title {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .drop-sub {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .status {
+      margin: 0;
+      font-size: 0.85rem;
+      padding: 0.6rem 0.75rem;
+      border-radius: var(--radius-sm);
+    }
+
+    .status.error {
+      color: var(--color-accent);
+      background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+    }
+
+    .status.ok {
+      color: var(--color-success);
+      background: color-mix(in srgb, var(--color-success) 12%, transparent);
+    }
+
+    .panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem;
+    }
+
+    .file-summary {
+      margin: 0;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .field-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .field input[type="password"] {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.6rem 0.75rem;
+      font-size: 0.95rem;
+    }
+
+    .field input[type="password"]:focus {
+      outline: 2px solid var(--color-primary);
+      outline-offset: -1px;
+    }
+
+    .advanced {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 0.75rem 1rem;
+    }
+
+    .advanced summary {
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .permissions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin: 0.85rem 0;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.85rem;
+      color: var(--text-primary);
+      cursor: pointer;
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .action-btn {
+      background: var(--bg-primary);
+      color: var(--color-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.6rem 1.1rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    .action-btn:hover {
+      border-color: var(--color-primary);
+    }
+
+    .action-btn.ghost {
+      color: var(--text-secondary);
+    }
+
+    .action-btn.primary {
+      background: var(--color-accent);
+      color: var(--color-accent-contrast);
+      border: none;
+      margin-left: auto;
+    }
+
+    .action-btn.primary:hover:not(:disabled) {
+      opacity: 0.9;
+    }
+
+    .action-btn:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+  </style>
+
+  <script>
+    const dropZone = document.getElementById(
+      "protect-drop",
+    ) as HTMLLabelElement;
+    const fileInput = document.getElementById(
+      "protect-input",
+    ) as HTMLInputElement;
+    const status = document.getElementById(
+      "protect-status",
+    ) as HTMLParagraphElement;
+    const panel = document.getElementById("protect-panel") as HTMLDivElement;
+    const fileSummary = document.getElementById("protect-file-summary")!;
+    const passwordInput = document.getElementById(
+      "protect-password",
+    ) as HTMLInputElement;
+    const confirmInput = document.getElementById(
+      "protect-confirm",
+    ) as HTMLInputElement;
+    const mismatch = document.getElementById(
+      "protect-mismatch",
+    ) as HTMLParagraphElement;
+    const ownerPasswordInput = document.getElementById(
+      "protect-owner-password",
+    ) as HTMLInputElement;
+    const submitBtn = document.getElementById(
+      "protect-submit",
+    ) as HTMLButtonElement;
+    const resetBtn = document.getElementById("protect-reset")!;
+
+    const permPrinting = document.getElementById(
+      "perm-printing",
+    ) as HTMLInputElement;
+    const permCopying = document.getElementById(
+      "perm-copying",
+    ) as HTMLInputElement;
+    const permModifying = document.getElementById(
+      "perm-modifying",
+    ) as HTMLInputElement;
+    const permForms = document.getElementById("perm-forms") as HTMLInputElement;
+
+    let currentFile: File | null = null;
+    let currentBytes: ArrayBuffer | null = null;
+
+    function showStatus(message: string, kind: "ok" | "error") {
+      status.textContent = message;
+      status.hidden = false;
+      status.classList.toggle("ok", kind === "ok");
+      status.classList.toggle("error", kind === "error");
+    }
+
+    function formatBytes(bytes: number): string {
+      if (bytes < 1024) return `${bytes} B`;
+      if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+      return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+    }
+
+    function updateSubmitState() {
+      const pw = passwordInput.value;
+      const confirm = confirmInput.value;
+      const matches = pw.length > 0 && pw === confirm;
+      mismatch.hidden = confirm.length === 0 || matches;
+      submitBtn.disabled = !currentBytes || !matches;
+    }
+
+    async function loadFile(file: File) {
+      if (
+        file.type !== "application/pdf" &&
+        !file.name.toLowerCase().endsWith(".pdf")
+      ) {
+        showStatus("Please choose a PDF file.", "error");
+        return;
+      }
+
+      status.hidden = true;
+      const { PDFDocument } = await import("@cantoo/pdf-lib");
+
+      try {
+        const bytes = await file.arrayBuffer();
+        const doc = await PDFDocument.load(bytes, { ignoreEncryption: true });
+        if (doc.isEncrypted) {
+          showStatus(
+            "This PDF is already encrypted. Remove the existing password first.",
+            "error",
+          );
+          return;
+        }
+        currentFile = file;
+        currentBytes = bytes;
+
+        fileSummary.textContent = `${file.name} — ${formatBytes(file.size)} · ${doc.getPageCount()} page${doc.getPageCount() === 1 ? "" : "s"}`;
+        panel.hidden = false;
+        updateSubmitState();
+      } catch (e) {
+        showStatus("Couldn't read this file — it may be corrupted.", "error");
+      }
+    }
+
+    fileInput.addEventListener("change", () => {
+      if (fileInput.files?.[0]) loadFile(fileInput.files[0]);
+      fileInput.value = "";
+    });
+
+    ["dragenter", "dragover"].forEach((evt) => {
+      dropZone.addEventListener(evt, (e) => {
+        e.preventDefault();
+        dropZone.classList.add("drag-over");
+      });
+    });
+
+    ["dragleave", "drop"].forEach((evt) => {
+      dropZone.addEventListener(evt, (e) => {
+        e.preventDefault();
+        dropZone.classList.remove("drag-over");
+      });
+    });
+
+    dropZone.addEventListener("drop", (e) => {
+      const file = (e as DragEvent).dataTransfer?.files?.[0];
+      if (file) loadFile(file);
+    });
+
+    resetBtn.addEventListener("click", () => {
+      currentFile = null;
+      currentBytes = null;
+      panel.hidden = true;
+      status.hidden = true;
+      passwordInput.value = "";
+      confirmInput.value = "";
+      ownerPasswordInput.value = "";
+    });
+
+    passwordInput.addEventListener("input", updateSubmitState);
+    confirmInput.addEventListener("input", updateSubmitState);
+
+    function downloadBlob(bytes: BlobPart, filename: string, type: string) {
+      const blob = new Blob([bytes], { type });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    submitBtn.addEventListener("click", async () => {
+      if (!currentBytes || !currentFile) return;
+      const userPassword = passwordInput.value;
+      const ownerPassword = ownerPasswordInput.value || userPassword;
+
+      status.hidden = true;
+      submitBtn.disabled = true;
+
+      try {
+        const { PDFDocument } = await import("@cantoo/pdf-lib");
+        const doc = await PDFDocument.load(currentBytes, {
+          ignoreEncryption: true,
+        });
+
+        doc.encrypt({
+          algorithm: "AES-256",
+          userPassword,
+          ownerPassword,
+          permissions: {
+            printing: permPrinting.checked ? "highResolution" : false,
+            copying: permCopying.checked,
+            modifying: permModifying.checked,
+            fillingForms: permForms.checked,
+          },
+        });
+
+        const bytes = await doc.save();
+        const baseName = currentFile.name.replace(/\.pdf$/i, "");
+        downloadBlob(bytes, `${baseName}-protected.pdf`, "application/pdf");
+        showStatus("Protected PDF downloaded successfully.", "ok");
+      } catch (e) {
+        showStatus(
+          `Couldn't protect this file: ${(e as Error).message}`,
+          "error",
+        );
+      } finally {
+        updateSubmitState();
+      }
+    });
+  </script>
+</ToolLayout>

@@ -1,0 +1,414 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+
+const howTo = [
+  {
+    name: "Type or paste your content",
+    text: "Enter a URL, plain text, email, or phone number — anything you want the QR code to hold.",
+  },
+  {
+    name: "Customize the look",
+    text: "Adjust the size, colors, and error correction level, or upload a logo to place in the center.",
+  },
+  {
+    name: "Download",
+    text: "Click Download PNG to save the QR code to your device, ready to print or share.",
+  },
+];
+
+const faqs = [
+  {
+    question: "Is the content I enter uploaded anywhere?",
+    answer:
+      "No. The QR code is generated entirely in your browser using JavaScript. Whatever you type — a URL, contact info, or private text — never leaves your device.",
+  },
+  {
+    question: "Will a QR code with a logo still scan correctly?",
+    answer:
+      "Usually, yes — as long as the error correction level is set to Q or H, which lets the code tolerate 25% or 30% of its data being obscured. The logo is kept small and centered to stay within that margin, but always test-scan your final code before printing it at scale.",
+  },
+  {
+    question: "What do the error correction levels (L, M, Q, H) mean?",
+    answer:
+      "They control how much of the code can be damaged or covered and still scan: L recovers about 7%, M about 15%, Q about 25%, and H about 30%. Higher levels make the code slightly denser but more durable — use H whenever you're adding a logo.",
+  },
+  {
+    question: "Can I use colored QR codes?",
+    answer:
+      "Yes, but keep strong contrast between the foreground and background colors. Low-contrast combinations (like light gray on white) can fail to scan on many phone cameras, especially in poor lighting.",
+  },
+];
+---
+
+<ToolLayout
+  title="QR Code Generator — Free, With Logo Support | Zipizy"
+  description="Generate a QR code from any text or URL, with custom colors, error correction level, and an optional logo. Free, private, runs in your browser."
+  toolName="QR Code Generator"
+  intro="Generate a QR code from any text or URL, with custom colors and an optional logo — free, private, no sign-up required."
+  howTo={howTo}
+  faqs={faqs}
+  relatedLinks={[
+    { href: "/wifi-qr-code-generator", label: "Wi-Fi QR Code Generator" },
+    { href: "/vcard-qr-generator", label: "vCard QR Code Generator" },
+    { href: "/whatsapp-link-qr", label: "WhatsApp Link QR Code" },
+  ]}
+>
+  <div class="qr-tool">
+    <div class="layout">
+      <div class="controls">
+        <div class="field">
+          <label for="qr-text">Content</label>
+          <textarea
+            id="qr-text"
+            rows="3"
+            placeholder="https://zipizy.com or any text..."
+            spellcheck="false"
+          >https://zipizy.com</textarea>
+        </div>
+
+        <div class="control-row">
+          <label class="control-field">
+            Size
+            <select id="qr-size">
+              <option value="200">200 px</option>
+              <option value="300" selected>
+                300 px
+              </option>
+              <option value="500">500 px</option>
+              <option value="800">800 px</option>
+            </select>
+          </label>
+          <label class="control-field">
+            Error correction
+            <select id="qr-ec">
+              <option value="L">L — 7%</option>
+              <option value="M" selected>
+                M — 15%
+              </option>
+              <option value="Q">Q — 25%</option>
+              <option value="H">H — 30%</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="control-row">
+          <label class="color-field">
+            Foreground
+            <input id="qr-fg" type="color" value="#000000" />
+          </label>
+          <label class="color-field">
+            Background
+            <input id="qr-bg" type="color" value="#ffffff" />
+          </label>
+        </div>
+
+        <div class="field">
+          <label for="qr-logo">Logo (optional)</label>
+          <div class="logo-row">
+            <input id="qr-logo" type="file" accept="image/*" />
+            <button id="qr-logo-clear" type="button" class="action-btn ghost">
+              Remove
+            </button>
+          </div>
+        </div>
+
+        <p id="qr-status" class="status error" hidden></p>
+      </div>
+
+      <div class="preview">
+        <canvas id="qr-canvas" width="300" height="300"></canvas>
+        <button id="qr-download" type="button" class="action-btn primary">
+          Download PNG
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .qr-tool {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    @media (max-width: 640px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .field label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    textarea {
+      width: 100%;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 0.65rem 0.75rem;
+      font-family: var(--font-sans);
+      font-size: 0.95rem;
+      resize: vertical;
+    }
+
+    textarea:focus {
+      outline: 2px solid var(--color-primary);
+      outline-offset: -1px;
+    }
+
+    .control-row {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .control-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      flex: 1;
+    }
+
+    .control-field select {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.5rem 0.6rem;
+    }
+
+    .color-field {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      flex: 1;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.4rem 0.6rem;
+    }
+
+    .color-field input {
+      width: 2.5rem;
+      height: 1.75rem;
+      border: none;
+      background: none;
+      padding: 0;
+      cursor: pointer;
+    }
+
+    .logo-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    #qr-logo {
+      color: var(--text-primary);
+      font-size: 0.85rem;
+      max-width: 100%;
+    }
+
+    .action-btn {
+      background: var(--bg-primary);
+      color: var(--color-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.5rem 0.9rem;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    .action-btn:hover {
+      border-color: var(--color-primary);
+    }
+
+    .action-btn.ghost {
+      color: var(--text-secondary);
+    }
+
+    .action-btn.primary {
+      background: var(--color-accent);
+      color: var(--color-accent-contrast);
+      border: none;
+      width: 100%;
+    }
+
+    .action-btn.primary:hover {
+      opacity: 0.9;
+    }
+
+    .status {
+      margin: 0;
+      font-size: 0.85rem;
+      padding: 0.6rem 0.75rem;
+      border-radius: var(--radius-sm);
+    }
+
+    .status.error {
+      color: var(--color-accent);
+      background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+    }
+
+    .preview {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+    }
+
+    #qr-canvas {
+      max-width: 100%;
+      height: auto;
+      border-radius: var(--radius-sm);
+    }
+  </style>
+
+  <script>
+    import QRCode from "qrcode";
+
+    const textInput = document.getElementById("qr-text") as HTMLTextAreaElement;
+    const sizeSelect = document.getElementById("qr-size") as HTMLSelectElement;
+    const ecSelect = document.getElementById("qr-ec") as HTMLSelectElement;
+    const fgInput = document.getElementById("qr-fg") as HTMLInputElement;
+    const bgInput = document.getElementById("qr-bg") as HTMLInputElement;
+    const logoInput = document.getElementById("qr-logo") as HTMLInputElement;
+    const logoClearBtn = document.getElementById("qr-logo-clear")!;
+    const canvas = document.getElementById("qr-canvas") as HTMLCanvasElement;
+    const downloadBtn = document.getElementById(
+      "qr-download",
+    ) as HTMLButtonElement;
+    const status = document.getElementById("qr-status") as HTMLParagraphElement;
+
+    let logoImage: HTMLImageElement | null = null;
+    let debounceHandle: ReturnType<typeof setTimeout> | undefined;
+    let generation = 0;
+
+    function scheduleGenerate() {
+      clearTimeout(debounceHandle);
+      debounceHandle = setTimeout(generate, 250);
+    }
+
+    async function generate() {
+      const token = ++generation;
+      const text = textInput.value;
+      const size = Number(sizeSelect.value);
+
+      canvas.width = size;
+      canvas.height = size;
+
+      if (!text) {
+        const ctx = canvas.getContext("2d")!;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        status.hidden = true;
+        downloadBtn.disabled = true;
+        return;
+      }
+
+      try {
+        await QRCode.toCanvas(canvas, text, {
+          width: size,
+          margin: 2,
+          errorCorrectionLevel: ecSelect.value as "L" | "M" | "Q" | "H",
+          color: {
+            dark: fgInput.value,
+            light: bgInput.value,
+          },
+        });
+        if (token !== generation) return;
+
+        if (logoImage) {
+          const ctx = canvas.getContext("2d")!;
+          const logoSize = Math.round(size * 0.2);
+          const x = (size - logoSize) / 2;
+          const y = (size - logoSize) / 2;
+          const pad = Math.round(logoSize * 0.12);
+          ctx.fillStyle = bgInput.value;
+          ctx.fillRect(
+            x - pad,
+            y - pad,
+            logoSize + pad * 2,
+            logoSize + pad * 2,
+          );
+          ctx.drawImage(logoImage, x, y, logoSize, logoSize);
+        }
+
+        status.hidden = true;
+        downloadBtn.disabled = false;
+      } catch (e) {
+        status.textContent = `Couldn't generate QR code: ${(e as Error).message}`;
+        status.hidden = false;
+        downloadBtn.disabled = true;
+      }
+    }
+
+    textInput.addEventListener("input", scheduleGenerate);
+    sizeSelect.addEventListener("change", generate);
+    ecSelect.addEventListener("change", generate);
+    fgInput.addEventListener("input", generate);
+    bgInput.addEventListener("input", generate);
+
+    logoInput.addEventListener("change", () => {
+      const file = logoInput.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          logoImage = img;
+          generate();
+        };
+        img.src = reader.result as string;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    logoClearBtn.addEventListener("click", () => {
+      logoImage = null;
+      logoInput.value = "";
+      generate();
+    });
+
+    downloadBtn.addEventListener("click", () => {
+      const url = canvas.toDataURL("image/png");
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "zipizy-qr-code.png";
+      a.click();
+    });
+
+    generate();
+  </script>
+</ToolLayout>

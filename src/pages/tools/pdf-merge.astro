@@ -1,0 +1,475 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+
+const howTo = [
+  {
+    name: "Add your PDFs",
+    text: "Click to choose two or more PDF files, or drag and drop them onto the drop zone.",
+  },
+  {
+    name: "Reorder if needed",
+    text: "Use the up and down arrows next to each file to control the order pages will appear in the merged PDF.",
+  },
+  {
+    name: "Merge and download",
+    text: "Click Merge & Download to combine every page from every file, in order, into a single PDF.",
+  },
+];
+
+const faqs = [
+  {
+    question: "Are my PDFs uploaded to a server?",
+    answer:
+      "No. Merging happens entirely in your browser using a client-side PDF library. Your files are read locally and never leave your device — this matters if your documents contain contracts, IDs, or other sensitive content.",
+  },
+  {
+    question: "Is there a limit to how many PDFs I can merge?",
+    answer:
+      "No hard limit, but every file is loaded into your browser's memory, so merging a very large number of large PDFs may be slow or use significant memory depending on your device.",
+  },
+  {
+    question: "Can I merge password-protected PDFs?",
+    answer:
+      "No. Encrypted or password-protected PDFs can't be read by the in-browser library used here. Remove the password with your PDF viewer first, then merge the unprotected file.",
+  },
+  {
+    question: "Will merging preserve bookmarks, forms, or links?",
+    answer:
+      "Pages, images, and text are preserved exactly as they appear in the source files. Interactive elements like form fields, bookmarks, and internal links are not carried over to the merged document.",
+  },
+];
+---
+
+<ToolLayout
+  title="PDF Merge — Combine PDFs Online for Free | Zipizy"
+  description="Merge multiple PDF files into one, in any order, entirely in your browser. Free, private, no sign-up, nothing uploaded."
+  toolName="PDF Merge"
+  intro="Combine multiple PDF files into one, in any order — free, private, no sign-up required."
+  howTo={howTo}
+  faqs={faqs}
+>
+  <div class="pdf-tool">
+    <label id="pdf-drop" for="pdf-input" class="drop-zone">
+      <span class="drop-title">
+        Click to add PDFs, or drag and drop them here
+      </span>
+      <span class="drop-sub">You can select multiple files at once</span>
+      <input
+        id="pdf-input"
+        type="file"
+        accept="application/pdf"
+        multiple
+        hidden
+      />
+    </label>
+
+    <p id="pdf-status" class="status" hidden></p>
+
+    <ol id="pdf-list" class="pdf-list"></ol>
+
+    <div class="actions">
+      <span id="pdf-summary" class="summary"></span>
+      <button id="pdf-clear" type="button" class="action-btn ghost" hidden>
+        Clear all
+      </button>
+      <button id="pdf-merge" type="button" class="action-btn primary" disabled>
+        Merge &amp; Download
+      </button>
+    </div>
+  </div>
+
+  <style>
+    .pdf-tool {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .drop-zone {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-lg);
+      padding: 2rem 1rem;
+      cursor: pointer;
+      text-align: center;
+      transition:
+        border-color 0.15s ease,
+        background 0.15s ease;
+    }
+
+    .drop-zone:hover,
+    .drop-zone.drag-over {
+      border-color: var(--color-primary);
+      background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+    }
+
+    .drop-title {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .drop-sub {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .status {
+      margin: 0;
+      font-size: 0.85rem;
+      padding: 0.6rem 0.75rem;
+      border-radius: var(--radius-sm);
+    }
+
+    .status.error {
+      color: var(--color-accent);
+      background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+    }
+
+    .status.ok {
+      color: var(--color-success);
+      background: color-mix(in srgb, var(--color-success) 12%, transparent);
+    }
+
+    .pdf-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    :global(.pdf-item) {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.6rem 0.75rem;
+    }
+
+    :global(.pdf-item .pdf-index) {
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      width: 1.5rem;
+      flex-shrink: 0;
+    }
+
+    :global(.pdf-item .pdf-meta) {
+      flex: 1;
+      min-width: 0;
+    }
+
+    :global(.pdf-item .pdf-name) {
+      display: block;
+      font-weight: 600;
+      font-size: 0.9rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    :global(.pdf-item .pdf-detail) {
+      display: block;
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+    }
+
+    :global(.pdf-item .pdf-detail.pdf-error) {
+      color: var(--color-accent);
+    }
+
+    :global(.pdf-item .pdf-btn) {
+      flex-shrink: 0;
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      border-radius: var(--radius-sm);
+      padding: 0.3rem 0.55rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+
+    :global(.pdf-item .pdf-btn:hover) {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+
+    :global(.pdf-item .pdf-btn:disabled) {
+      opacity: 0.35;
+      cursor: default;
+    }
+
+    :global(.pdf-item .pdf-btn.pdf-remove:hover) {
+      border-color: var(--color-accent);
+      color: var(--color-accent);
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .summary {
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      margin-right: auto;
+    }
+
+    .action-btn {
+      background: var(--bg-primary);
+      color: var(--color-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.6rem 1.1rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    .action-btn:hover {
+      border-color: var(--color-primary);
+    }
+
+    .action-btn.ghost {
+      color: var(--text-secondary);
+    }
+
+    .action-btn.primary {
+      background: var(--color-accent);
+      color: var(--color-accent-contrast);
+      border: none;
+    }
+
+    .action-btn.primary:hover:not(:disabled) {
+      opacity: 0.9;
+    }
+
+    .action-btn:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+  </style>
+
+  <script>
+    interface PdfEntry {
+      id: number;
+      file: File;
+      bytes: ArrayBuffer;
+      pageCount: number | null;
+      error: string | null;
+    }
+
+    const dropZone = document.getElementById("pdf-drop") as HTMLLabelElement;
+    const fileInput = document.getElementById("pdf-input") as HTMLInputElement;
+    const list = document.getElementById("pdf-list")!;
+    const summary = document.getElementById("pdf-summary")!;
+    const clearBtn = document.getElementById("pdf-clear") as HTMLButtonElement;
+    const mergeBtn = document.getElementById("pdf-merge") as HTMLButtonElement;
+    const status = document.getElementById(
+      "pdf-status",
+    ) as HTMLParagraphElement;
+
+    let entries: PdfEntry[] = [];
+    let nextId = 1;
+
+    function showStatus(message: string, kind: "ok" | "error") {
+      status.textContent = message;
+      status.hidden = false;
+      status.classList.toggle("ok", kind === "ok");
+      status.classList.toggle("error", kind === "error");
+    }
+
+    function formatBytes(bytes: number): string {
+      if (bytes < 1024) return `${bytes} B`;
+      if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+      return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+    }
+
+    function render() {
+      list.innerHTML = "";
+      entries.forEach((entry, i) => {
+        const li = document.createElement("li");
+        li.className = "pdf-item";
+
+        const idx = document.createElement("span");
+        idx.className = "pdf-index";
+        idx.textContent = `${i + 1}.`;
+
+        const meta = document.createElement("div");
+        meta.className = "pdf-meta";
+        const name = document.createElement("span");
+        name.className = "pdf-name";
+        name.textContent = entry.file.name;
+        const detail = document.createElement("span");
+        detail.className = entry.error ? "pdf-detail pdf-error" : "pdf-detail";
+        detail.textContent = entry.error
+          ? entry.error
+          : `${formatBytes(entry.file.size)} · ${entry.pageCount ?? "…"} page${entry.pageCount === 1 ? "" : "s"}`;
+        meta.appendChild(name);
+        meta.appendChild(detail);
+
+        const upBtn = document.createElement("button");
+        upBtn.type = "button";
+        upBtn.className = "pdf-btn";
+        upBtn.textContent = "↑";
+        upBtn.disabled = i === 0;
+        upBtn.addEventListener("click", () => moveEntry(i, -1));
+
+        const downBtn = document.createElement("button");
+        downBtn.type = "button";
+        downBtn.className = "pdf-btn";
+        downBtn.textContent = "↓";
+        downBtn.disabled = i === entries.length - 1;
+        downBtn.addEventListener("click", () => moveEntry(i, 1));
+
+        const removeBtn = document.createElement("button");
+        removeBtn.type = "button";
+        removeBtn.className = "pdf-btn pdf-remove";
+        removeBtn.textContent = "Remove";
+        removeBtn.addEventListener("click", () => {
+          entries = entries.filter((e) => e.id !== entry.id);
+          render();
+        });
+
+        li.appendChild(idx);
+        li.appendChild(meta);
+        li.appendChild(upBtn);
+        li.appendChild(downBtn);
+        li.appendChild(removeBtn);
+        list.appendChild(li);
+      });
+
+      const validCount = entries.filter((e) => !e.error).length;
+      const totalPages = entries.reduce(
+        (sum, e) => sum + (e.pageCount ?? 0),
+        0,
+      );
+      summary.textContent = entries.length
+        ? `${entries.length} file${entries.length === 1 ? "" : "s"} · ${totalPages} page${totalPages === 1 ? "" : "s"} total`
+        : "";
+      clearBtn.hidden = entries.length === 0;
+      mergeBtn.disabled = validCount < 2;
+    }
+
+    function moveEntry(index: number, delta: number) {
+      const target = index + delta;
+      if (target < 0 || target >= entries.length) return;
+      [entries[index], entries[target]] = [entries[target], entries[index]];
+      render();
+    }
+
+    async function addFiles(files: FileList | File[]) {
+      const pdfFiles = Array.from(files).filter(
+        (f) =>
+          f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf"),
+      );
+      if (pdfFiles.length === 0) return;
+
+      status.hidden = true;
+      const { PDFDocument } = await import("@cantoo/pdf-lib");
+
+      for (const file of pdfFiles) {
+        const entry: PdfEntry = {
+          id: nextId++,
+          file,
+          bytes: new ArrayBuffer(0),
+          pageCount: null,
+          error: null,
+        };
+        entries.push(entry);
+        render();
+
+        try {
+          const bytes = await file.arrayBuffer();
+          const doc = await PDFDocument.load(bytes, { ignoreEncryption: true });
+          if (doc.isEncrypted) {
+            entry.error = "Encrypted — remove the password first.";
+          } else {
+            entry.bytes = bytes;
+            entry.pageCount = doc.getPageCount();
+          }
+        } catch (e) {
+          entry.error = "Couldn't read this file — it may be corrupted.";
+        }
+        render();
+      }
+    }
+
+    fileInput.addEventListener("change", () => {
+      if (fileInput.files) addFiles(fileInput.files);
+      fileInput.value = "";
+    });
+
+    ["dragenter", "dragover"].forEach((evt) => {
+      dropZone.addEventListener(evt, (e) => {
+        e.preventDefault();
+        dropZone.classList.add("drag-over");
+      });
+    });
+
+    ["dragleave", "drop"].forEach((evt) => {
+      dropZone.addEventListener(evt, (e) => {
+        e.preventDefault();
+        dropZone.classList.remove("drag-over");
+      });
+    });
+
+    dropZone.addEventListener("drop", (e) => {
+      const dt = (e as DragEvent).dataTransfer;
+      if (dt?.files?.length) addFiles(dt.files);
+    });
+
+    clearBtn.addEventListener("click", () => {
+      entries = [];
+      status.hidden = true;
+      render();
+    });
+
+    mergeBtn.addEventListener("click", async () => {
+      const validEntries = entries.filter(
+        (e) => !e.error && e.pageCount !== null,
+      );
+      if (validEntries.length < 2) return;
+
+      mergeBtn.disabled = true;
+      showStatus("Merging…", "ok");
+
+      try {
+        const { PDFDocument } = await import("@cantoo/pdf-lib");
+        const merged = await PDFDocument.create();
+
+        for (const entry of validEntries) {
+          const src = await PDFDocument.load(entry.bytes, {
+            ignoreEncryption: true,
+          });
+          const pages = await merged.copyPages(src, src.getPageIndices());
+          pages.forEach((p) => merged.addPage(p));
+        }
+
+        const mergedBytes = await merged.save();
+        const blob = new Blob([mergedBytes], { type: "application/pdf" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "zipizy-merged.pdf";
+        a.click();
+        URL.revokeObjectURL(url);
+
+        showStatus(`Merged ${validEntries.length} files successfully.`, "ok");
+      } catch (e) {
+        showStatus(`Merge failed: ${(e as Error).message}`, "error");
+      } finally {
+        mergeBtn.disabled = entries.filter((e) => !e.error).length < 2;
+      }
+    });
+
+    render();
+  </script>
+</ToolLayout>

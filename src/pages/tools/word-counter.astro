@@ -1,0 +1,217 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+
+const howTo = [
+  {
+    name: "Paste or type your text",
+    text: "Click into the text box below and paste your content, or start typing directly.",
+  },
+  {
+    name: "Read the live stats",
+    text: "Word count, character count, sentence count, and estimated reading time update instantly as you type.",
+  },
+  {
+    name: "Copy or clear",
+    text: "Use the Clear button to start over, or select all and copy your text once you're done editing.",
+  },
+];
+
+const faqs = [
+  {
+    question: "Does this word counter upload my text anywhere?",
+    answer:
+      "No. All counting happens locally in your browser using JavaScript. Your text is never sent to a server, stored, or logged.",
+  },
+  {
+    question: "How is reading time calculated?",
+    answer:
+      "We estimate reading time based on an average adult reading speed of 200 words per minute. Actual reading time varies by content complexity and reader.",
+  },
+  {
+    question: "Does it count words in languages other than English?",
+    answer:
+      "Word counting works by splitting on whitespace, so it works reasonably well for most space-separated languages. Character count works for any language, including those without spaces like Chinese or Japanese.",
+  },
+  {
+    question: "Is there a limit to how much text I can paste?",
+    answer:
+      "No hard limit is enforced, but very large documents (millions of characters) may slow down your browser tab since processing happens on your device.",
+  },
+];
+---
+
+<ToolLayout
+  title="Word Counter & Character Counter — Free Online Tool | Zipizy"
+  description="Count words, characters, sentences, and estimate reading time instantly. 100% free, private, and runs entirely in your browser — no sign-up required."
+  toolName="Word Counter"
+  intro="Count words, characters, and sentences instantly — free, private, and no sign-up required."
+  howTo={howTo}
+  faqs={faqs}
+>
+  <div class="word-counter">
+    <textarea
+      id="wc-input"
+      placeholder="Type or paste your text here..."
+      rows="10"
+      aria-label="Text to count"
+    ></textarea>
+
+    <div class="stats">
+      <div class="stat">
+        <span class="stat-value" id="wc-words">
+          0
+        </span>
+        <span class="stat-label">Words</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="wc-chars">
+          0
+        </span>
+        <span class="stat-label">Characters</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="wc-chars-no-space">
+          0
+        </span>
+        <span class="stat-label">Chars (no spaces)</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="wc-sentences">
+          0
+        </span>
+        <span class="stat-label">Sentences</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="wc-paragraphs">
+          0
+        </span>
+        <span class="stat-label">Paragraphs</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="wc-reading-time">
+          0 min
+        </span>
+        <span class="stat-label">Reading time</span>
+      </div>
+    </div>
+
+    <button id="wc-clear" type="button" class="clear-btn">
+      Clear
+    </button>
+  </div>
+
+  <style>
+    .word-counter {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    textarea {
+      width: 100%;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 0.75rem;
+      font-family: var(--font-sans);
+      font-size: 1rem;
+      resize: vertical;
+    }
+
+    textarea:focus {
+      outline: 2px solid var(--color-primary);
+      outline-offset: -1px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .stat {
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.75rem;
+      text-align: center;
+    }
+
+    .stat-value {
+      display: block;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--color-primary);
+    }
+
+    .stat-label {
+      display: block;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      margin-top: 0.15rem;
+    }
+
+    .clear-btn {
+      align-self: flex-start;
+      background: var(--color-accent);
+      color: var(--color-accent-contrast);
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 0.6rem 1.25rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .clear-btn:hover {
+      opacity: 0.9;
+    }
+  </style>
+
+  <script>
+    const input = document.getElementById("wc-input") as HTMLTextAreaElement;
+    const wordsEl = document.getElementById("wc-words")!;
+    const charsEl = document.getElementById("wc-chars")!;
+    const charsNoSpaceEl = document.getElementById("wc-chars-no-space")!;
+    const sentencesEl = document.getElementById("wc-sentences")!;
+    const paragraphsEl = document.getElementById("wc-paragraphs")!;
+    const readingTimeEl = document.getElementById("wc-reading-time")!;
+    const clearBtn = document.getElementById("wc-clear")!;
+
+    function update() {
+      const text = input.value;
+      const trimmed = text.trim();
+
+      const words = trimmed.length ? trimmed.split(/\s+/).length : 0;
+      const chars = text.length;
+      const charsNoSpace = text.replace(/\s/g, "").length;
+      const sentences = trimmed.length
+        ? (trimmed.match(/[^.!?]+(?:[.!?]+|$)/g) || (trimmed ? [trimmed] : []))
+            .length
+        : 0;
+      const paragraphs = trimmed.length
+        ? trimmed.split(/\n+/).filter((p) => p.trim().length > 0).length
+        : 0;
+      const readingMinutes = words / 200;
+
+      wordsEl.textContent = words.toLocaleString();
+      charsEl.textContent = chars.toLocaleString();
+      charsNoSpaceEl.textContent = charsNoSpace.toLocaleString();
+      sentencesEl.textContent = sentences.toLocaleString();
+      paragraphsEl.textContent = paragraphs.toLocaleString();
+      readingTimeEl.textContent =
+        readingMinutes < 1 && words > 0
+          ? "< 1 min"
+          : `${Math.round(readingMinutes)} min`;
+    }
+
+    input.addEventListener("input", update);
+    clearBtn.addEventListener("click", () => {
+      input.value = "";
+      input.focus();
+      update();
+    });
+
+    update();
+  </script>
+</ToolLayout>

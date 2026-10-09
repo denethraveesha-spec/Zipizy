@@ -1,0 +1,67 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Header from "../components/Header.astro";
+---
+
+<Layout
+  title="Privacy — Zipizy"
+  description="How Zipizy processes files, stores preferences and makes network requests."
+>
+  <Header />
+  <main>
+    <h1>Privacy</h1>
+    <p>Updated 9 October 2026</p>
+    <h2>Your files and text</h2>
+    <p>
+      PDF, image, text, QR and developer tools process inputs on your device.
+      Zipizy does not upload those inputs to a processing server. There is no
+      account system.
+    </p>
+    <h2>Tools that use the internet</h2>
+    <p>
+      YouTube and Vimeo thumbnail tools contact those services to retrieve video
+      information or images. Those providers receive the requested video
+      identifier or URL and connection information such as your IP address.
+      These tools do not work offline.
+    </p>
+    <h2>Desktop app</h2>
+    <p>
+      The desktop app serves bundled tools locally and includes no analytics or
+      advertising. Opening a GitHub, support or other external link opens your
+      browser. Downloads are saved where you choose. Your operating system may
+      retain downloaded files.
+    </p>
+    <h2>Preferences and the website</h2>
+    <p>
+      Your light/dark preference is stored locally as zipizy-theme. This release
+      does not include analytics or advertising scripts. A host serving the web
+      version may keep normal connection logs; its policy applies to those
+      requests.
+    </p>
+    <h2>Sharing a bug report</h2>
+    <p>
+      Issues on the public repository can be read by anyone. Use sample data and
+      remove passwords or personal information from attachments. If you email
+      us, we receive the information you include.
+    </p>
+    <h2>Contact</h2>
+    <p>
+      <a href="mailto:denethraveesha@gmail.com">denethraveesha@gmail.com</a>
+    </p>
+  </main>
+  <style>
+    main {
+      max-width: 760px;
+      margin: auto;
+      padding: 40px 24px;
+    }
+    h2 {
+      font-size: 22px;
+      margin-top: 32px;
+    }
+    p {
+      line-height: 1.8;
+      color: var(--text-secondary);
+    }
+  </style>
+</Layout>

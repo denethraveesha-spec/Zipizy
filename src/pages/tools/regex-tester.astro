@@ -1,0 +1,438 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+
+const howTo = [
+  {
+    name: "Write a pattern",
+    text: "Type a regular expression into the Pattern field, without the surrounding slashes.",
+  },
+  {
+    name: "Choose flags",
+    text: "Toggle g, i, m, s, u, or y to control global, case-insensitive, multiline, dotall, unicode, or sticky matching behavior.",
+  },
+  {
+    name: "Paste test text",
+    text: "Paste the text you want to match against. Matches are highlighted live, and every match with its capture groups is listed below.",
+  },
+];
+
+const faqs = [
+  {
+    question: "Does this regex tester send my pattern or text anywhere?",
+    answer:
+      "No. Matching runs entirely in your browser's JavaScript regex engine (the same one used by V8/Chrome), so nothing is uploaded, logged, or stored.",
+  },
+  {
+    question: "Which regex flavor does this use?",
+    answer:
+      "JavaScript's native RegExp syntax, the same flavor used in Node.js and browser JavaScript. Some features from other flavors (like PCRE lookbehind variations or possessive quantifiers) may behave differently or be unsupported.",
+  },
+  {
+    question: "Why do I only see one match highlighted?",
+    answer:
+      "Enable g to show all matches (up to 1,000). Without g, only the first match is returned. The y flag requires a match at the current position.",
+  },
+  {
+    question: "Can a bad pattern freeze the page?",
+    answer:
+      "Matching runs in a separate worker with a 1.5-second timeout. Slow patterns are stopped so you can edit the input without freezing the interface. Results are capped at 1,000 matches.",
+  },
+];
+---
+
+<ToolLayout
+  title="Regex Tester — Test JavaScript Regular Expressions | Zipizy"
+  description="Test JavaScript regular expressions against sample text with live match highlighting, capture groups, and flag toggles. Free, private, no sign-up."
+  toolName="Regex Tester"
+  intro="Test JavaScript regular expressions with live match highlighting and capture groups — free, private, no sign-up required."
+  howTo={howTo}
+  faqs={faqs}
+>
+  <div class="regex-tool">
+    <div class="pattern-row">
+      <span class="slash">/</span>
+      <input
+        id="rt-pattern"
+        type="text"
+        placeholder="pattern, e.g. \b\w+@\w+\.\w+\b"
+        aria-label="Regular expression pattern"
+        spellcheck="false"
+        autocomplete="off"
+      />
+      <span class="slash">/</span>
+      <div class="flags">
+        <label>
+          <input type="checkbox" id="flag-g" checked /> g
+        </label>
+        <label>
+          <input type="checkbox" id="flag-i" /> i
+        </label>
+        <label>
+          <input type="checkbox" id="flag-m" /> m
+        </label>
+        <label>
+          <input type="checkbox" id="flag-s" /> s
+        </label>
+        <label>
+          <input type="checkbox" id="flag-u" /> u
+        </label>
+        <label>
+          <input type="checkbox" id="flag-y" /> y
+        </label>
+      </div>
+    </div>
+
+    <p id="rt-error" class="status error" hidden></p>
+
+    <textarea
+      id="rt-text"
+      rows="6"
+      placeholder="Paste the text to test your pattern against..."
+      aria-label="Text to test"
+      spellcheck="false"
+    ></textarea>
+
+    <div class="result-header">
+      <h3>Matches</h3>
+      <span id="rt-count" class="match-count">
+        0 matches
+      </span>
+      <button id="rt-example" type="button" class="example-btn">
+        Load example
+      </button>
+    </div>
+
+    <div id="rt-highlight" class="highlight-view" aria-live="polite"></div>
+
+    <ol id="rt-match-list" class="match-list"></ol>
+  </div>
+
+  <style>
+    .regex-tool {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .pattern-row {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 0.5rem 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .slash {
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+      font-size: 1.1rem;
+    }
+
+    #rt-pattern {
+      flex: 1;
+      min-width: 180px;
+      border: none;
+      background: none;
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: 1rem;
+      outline: none;
+    }
+
+    .flags {
+      display: flex;
+      gap: 0.6rem;
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .flags label {
+      display: flex;
+      align-items: center;
+      gap: 0.2rem;
+      cursor: pointer;
+    }
+
+    textarea {
+      width: 100%;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 0.75rem;
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      resize: vertical;
+    }
+
+    textarea:focus,
+    #rt-pattern:focus {
+      outline: 2px solid var(--color-primary);
+      outline-offset: -1px;
+    }
+
+    .status {
+      margin: 0;
+      font-size: 0.85rem;
+      font-family: var(--font-mono);
+      padding: 0.6rem 0.75rem;
+      border-radius: var(--radius-sm);
+    }
+
+    .status.error {
+      color: var(--color-accent);
+      background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+    }
+
+    .result-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .result-header h3 {
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    .match-count {
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+    }
+
+    .example-btn {
+      margin-left: auto;
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      border-radius: var(--radius-sm);
+      padding: 0.4rem 0.75rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    .example-btn:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+
+    .highlight-view {
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 0.75rem;
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+      min-height: 3rem;
+      color: var(--text-primary);
+    }
+
+    :global(.regex-match) {
+      background: color-mix(in srgb, var(--color-primary) 25%, transparent);
+      color: var(--text-primary);
+      border-radius: 3px;
+      padding: 0 1px;
+    }
+
+    .match-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      max-height: 260px;
+      overflow-y: auto;
+    }
+
+    :global(.match-item) {
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.6rem 0.75rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+    }
+
+    :global(.match-item .match-text) {
+      color: var(--color-primary);
+      font-weight: 600;
+    }
+
+    :global(.match-item .match-meta) {
+      color: var(--text-secondary);
+      margin-top: 0.2rem;
+    }
+  </style>
+
+  <script>
+    const patternInput = document.getElementById(
+      "rt-pattern",
+    ) as HTMLInputElement;
+    const textInput = document.getElementById("rt-text") as HTMLTextAreaElement;
+    const errorEl = document.getElementById("rt-error") as HTMLParagraphElement;
+    const countEl = document.getElementById("rt-count")!;
+    const highlightEl = document.getElementById("rt-highlight")!;
+    const matchListEl = document.getElementById("rt-match-list")!;
+    const exampleBtn = document.getElementById("rt-example")!;
+
+    const flagIds = ["g", "i", "m", "s", "u", "y"] as const;
+    const flagCheckboxes = Object.fromEntries(
+      flagIds.map((f) => [
+        f,
+        document.getElementById(`flag-${f}`) as HTMLInputElement,
+      ]),
+    );
+
+    function escapeHtml(s: string): string {
+      return s
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+
+    function currentFlags(): string {
+      return flagIds.filter((f) => flagCheckboxes[f].checked).join("");
+    }
+
+    let activeWorker: Worker | undefined;
+    let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
+    let generation = 0;
+    let debounceHandle: ReturnType<typeof setTimeout> | undefined;
+    function cancelWork() {
+      generation++;
+      activeWorker?.terminate();
+      activeWorker = undefined;
+      clearTimeout(timeoutHandle);
+    }
+
+    function scheduleUpdate() {
+      cancelWork();
+      clearTimeout(debounceHandle);
+      debounceHandle = setTimeout(update, 200);
+    }
+
+    function update() {
+      clearTimeout(debounceHandle);
+      cancelWork();
+      const currentGeneration = generation;
+      const pattern = patternInput.value;
+      const text = textInput.value;
+
+      if (!pattern) {
+        errorEl.hidden = true;
+        highlightEl.textContent = text;
+        matchListEl.innerHTML = "";
+        countEl.textContent = "0 matches";
+        return;
+      }
+
+      errorEl.hidden = true;
+      highlightEl.textContent = text;
+      matchListEl.replaceChildren();
+      countEl.textContent = "Checking…";
+      if (text.length > 100_000 || pattern.length > 10_000) {
+        errorEl.textContent =
+          "Use up to 100,000 characters of text and a pattern up to 10,000 characters.";
+        errorEl.hidden = false;
+        countEl.textContent = "Not checked";
+        return;
+      }
+      const worker = new Worker(
+        new URL("../../workers/regex.worker.ts", import.meta.url),
+        { type: "module" },
+      );
+      activeWorker = worker;
+      timeoutHandle = setTimeout(() => {
+        if (currentGeneration !== generation) return;
+        cancelWork();
+        countEl.textContent = "Timed out";
+        errorEl.textContent =
+          "This pattern took too long. Simplify it or try shorter text.";
+        errorEl.hidden = false;
+      }, 1500);
+      worker.onerror = () => {
+        if (currentGeneration !== generation) return;
+        cancelWork();
+        countEl.textContent = "Not checked";
+        errorEl.textContent =
+          "Could not start the matcher. Reload and try again.";
+        errorEl.hidden = false;
+      };
+      worker.onmessage = (event) => {
+        if (currentGeneration !== generation) return;
+        clearTimeout(timeoutHandle);
+        worker.terminate();
+        activeWorker = undefined;
+        if (event.data.error) {
+          errorEl.textContent = event.data.error;
+          errorEl.hidden = false;
+          countEl.textContent = "Invalid pattern";
+          return;
+        }
+        const matches = event.data.matches as RegExpMatchArray[];
+        countEl.textContent = event.data.truncated
+          ? "First 1,000 matches (limit reached)"
+          : matches.length + " match" + (matches.length === 1 ? "" : "es");
+        let html = "";
+        let lastPos = 0;
+        matches.forEach((m) => {
+          const idx = m.index ?? 0;
+          html += escapeHtml(text.slice(lastPos, idx));
+          html += `<mark class="regex-match">${escapeHtml(m[0])}</mark>`;
+          lastPos = idx + m[0].length;
+        });
+        html += escapeHtml(text.slice(lastPos));
+        highlightEl.innerHTML = html || "&nbsp;";
+
+        matchListEl.innerHTML = "";
+        matches.forEach((m, i) => {
+          const li = document.createElement("li");
+          li.className = "match-item";
+
+          const groups = m.slice(1);
+          const namedGroups = m.groups ? Object.entries(m.groups) : [];
+
+          let metaParts = [`index ${m.index}`];
+          if (groups.length > 0) {
+            metaParts.push(
+              `groups: ${groups.map((g, gi) => `[${gi + 1}] ${g === undefined ? "—" : JSON.stringify(g)}`).join(", ")}`,
+            );
+          }
+          if (namedGroups.length > 0) {
+            metaParts.push(
+              `named: ${namedGroups.map(([k, v]) => `${k}=${v === undefined ? "—" : JSON.stringify(v)}`).join(", ")}`,
+            );
+          }
+
+          li.innerHTML = `<div><span class="match-text">#${i + 1} "${escapeHtml(m[0])}"</span></div><div class="match-meta">${escapeHtml(metaParts.join(" · "))}</div>`;
+          matchListEl.appendChild(li);
+        });
+      };
+      worker.postMessage({ pattern, text, flags: currentFlags() });
+    }
+
+    patternInput.addEventListener("input", scheduleUpdate);
+    textInput.addEventListener("input", scheduleUpdate);
+    flagIds.forEach((f) =>
+      flagCheckboxes[f].addEventListener("change", update),
+    );
+
+    exampleBtn.addEventListener("click", () => {
+      patternInput.value = "\\b[\\w.+-]+@[\\w-]+\\.[\\w.-]+\\b";
+      flagCheckboxes.g.checked = true;
+      flagCheckboxes.i.checked = true;
+      textInput.value =
+        "Contact us at hello@zipizy.com or support@zipizy.com.\nInvalid: not-an-email, another.test@.com";
+      update();
+    });
+
+    update();
+  </script>
+</ToolLayout>

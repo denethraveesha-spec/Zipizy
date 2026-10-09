@@ -1,0 +1,206 @@
+---
+import Layout from "./Layout.astro";
+import Header from "../components/Header.astro";
+
+interface HowToStep {
+  name: string;
+  text: string;
+}
+
+interface Faq {
+  question: string;
+  answer: string;
+}
+
+interface RelatedLink {
+  href: string;
+  label: string;
+}
+
+interface Props {
+  title: string;
+  description: string;
+  toolName: string;
+  intro: string;
+  howTo: HowToStep[];
+  faqs: Faq[];
+  privacyNote?: string;
+  relatedLinks?: RelatedLink[];
+}
+
+const {
+  title,
+  description,
+  toolName,
+  intro,
+  howTo,
+  faqs,
+  privacyNote = "This tool runs entirely in your browser. Your files are never uploaded to a server.",
+  relatedLinks = [],
+} = Astro.props;
+
+const howToSchema = {
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  name: `How to use ${toolName}`,
+  step: howTo.map((step) => ({
+    "@type": "HowToStep",
+    name: step.name,
+    text: step.text,
+  })),
+};
+
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((faq) => ({
+    "@type": "Question",
+    name: faq.question,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: faq.answer,
+    },
+  })),
+};
+
+const appSchema = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: toolName,
+  applicationCategory: "UtilitiesApplication",
+  operatingSystem: "Any (browser-based)",
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "USD",
+  },
+};
+---
+
+<Layout title={title} description={description}>
+  <Fragment slot="head">
+    <script type="application/ld+json" set:html={JSON.stringify(howToSchema)} />
+    <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />
+    <script type="application/ld+json" set:html={JSON.stringify(appSchema)} />
+  </Fragment>
+
+  <Header />
+
+  <main>
+    <section class="tool-intro">
+      <h1>{toolName}</h1>
+      <p class="intro">{intro}</p>
+    </section>
+
+    <section class="tool-widget">
+      <slot />
+    </section>
+
+    <p class="privacy-note">🔒 {privacyNote}</p>
+
+    <section class="how-to">
+      <h2>How to use {toolName}</h2>
+      <ol>
+        {howTo.map((step) => (
+          <li>
+            <strong>{step.name}</strong>
+            <p>{step.text}</p>
+          </li>
+        ))}
+      </ol>
+    </section>
+
+    <section class="faq">
+      <h2>Frequently asked questions</h2>
+      {faqs.map((faq) => (
+        <details>
+          <summary>{faq.question}</summary>
+          <p>{faq.answer}</p>
+        </details>
+      ))}
+    </section>
+
+    {relatedLinks.length > 0 && (
+      <section class="related">
+        <h2>Related tools</h2>
+        <ul>
+          {relatedLinks.map((link) => (
+            <li>
+              <a href={link.href}>{link.label}</a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+  </main>
+
+  <style>
+    main {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 4rem;
+    }
+
+    .tool-intro h1 {
+      margin-bottom: 0.25rem;
+    }
+
+    .intro {
+      color: var(--text-secondary);
+    }
+
+    .tool-widget {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+    }
+
+    .privacy-note {
+      color: var(--color-success);
+      font-size: 0.9rem;
+    }
+
+    .how-to ol {
+      padding-left: 1.25rem;
+    }
+
+    .how-to li {
+      margin-bottom: 0.75rem;
+    }
+
+    .how-to li p {
+      color: var(--text-secondary);
+      margin: 0.25rem 0 0;
+    }
+
+    .faq details {
+      border-bottom: 1px solid var(--border);
+      padding: 0.75rem 0;
+    }
+
+    .faq summary {
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .faq p {
+      color: var(--text-secondary);
+      margin: 0.5rem 0 0;
+    }
+
+    .related ul {
+      padding-left: 1.25rem;
+      margin: 0;
+    }
+
+    .related li {
+      margin-bottom: 0.4rem;
+    }
+
+    .related a {
+      color: var(--color-primary);
+    }
+  </style>
+</Layout>

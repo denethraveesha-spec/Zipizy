@@ -1,0 +1,194 @@
+---
+import ToolLayout from "../layouts/ToolLayout.astro";
+import QrCodeBuilder from "../components/QrCodeBuilder.astro";
+
+const howTo = [
+  {
+    name: "Enter your contact details",
+    text: "Fill in your name, phone, email, and any other details you want to share.",
+  },
+  {
+    name: "Check the preview",
+    text: "The QR code updates automatically as you type. Customize the size, colors, or add a logo if you like.",
+  },
+  {
+    name: "Print or share it",
+    text: "Put the code on a business card, poster, or email signature — scanning it offers to save your details directly into the scanner's contacts app.",
+  },
+];
+
+const faqs = [
+  {
+    question: "Is my contact information sent anywhere?",
+    answer:
+      "No. The QR code is generated entirely in your browser — your details are encoded directly into the image on your device and never transmitted to Zipizy or anyone else.",
+  },
+  {
+    question: "What is a vCard, and why does scanning offer to save a contact?",
+    answer:
+      "vCard is a standard text format for contact information that phones and address book apps recognize. When a camera app detects vCard-formatted text inside a QR code, it offers to add the details straight into Contacts instead of just showing text or a link.",
+  },
+  {
+    question: "Do I have to fill in every field?",
+    answer:
+      "No — only your name is required. Leave phone, email, organization, or website blank if you don't want to include them; empty fields are simply left out of the generated code.",
+  },
+  {
+    question: "Is this a good replacement for a paper business card?",
+    answer:
+      "It pairs well with one. Many people print a vCard QR code directly on a physical business card or add it to an email signature, so the recipient can save your details with a scan instead of typing them in by hand.",
+  },
+];
+---
+
+<ToolLayout
+  title="vCard QR Code Generator — Free, No Sign-Up | Zipizy"
+  description="Generate a QR code that saves your contact details directly to someone's phone when scanned. Free, private, runs entirely in your browser."
+  toolName="vCard QR Code Generator"
+  intro="Create a QR code that saves your contact card to someone's phone in one scan — free, private, no sign-up required."
+  howTo={howTo}
+  faqs={faqs}
+  relatedLinks={[
+    { href: "/wifi-qr-code-generator", label: "Wi-Fi QR Code Generator" },
+    { href: "/whatsapp-link-qr", label: "WhatsApp Link QR Code" },
+    { href: "/tools/qr-generator", label: "QR Code Generator" },
+  ]}
+>
+  <div class="vcard-form">
+    <div class="field">
+      <label for="vc-name">Full name</label>
+      <input
+        id="vc-name"
+        type="text"
+        placeholder="Jane Smith"
+        autocomplete="off"
+      />
+    </div>
+    <div class="control-row">
+      <div class="field">
+        <label for="vc-phone">Phone</label>
+        <input
+          id="vc-phone"
+          type="text"
+          placeholder="+1 555 123 4567"
+          autocomplete="off"
+        />
+      </div>
+      <div class="field">
+        <label for="vc-email">Email</label>
+        <input
+          id="vc-email"
+          type="email"
+          placeholder="jane@example.com"
+          autocomplete="off"
+        />
+      </div>
+    </div>
+    <div class="control-row">
+      <div class="field">
+        <label for="vc-org">Organization</label>
+        <input
+          id="vc-org"
+          type="text"
+          placeholder="Acme Inc. (optional)"
+          autocomplete="off"
+        />
+      </div>
+      <div class="field">
+        <label for="vc-url">Website</label>
+        <input
+          id="vc-url"
+          type="text"
+          placeholder="https://example.com (optional)"
+          autocomplete="off"
+        />
+      </div>
+    </div>
+  </div>
+
+  <QrCodeBuilder outputName="zipizy-vcard-qr" />
+</ToolLayout>
+
+<style>
+  .vcard-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    flex: 1;
+  }
+
+  .field label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+
+  .field input {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.6rem 0.75rem;
+    font-size: 0.95rem;
+  }
+
+  .field input:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -1px;
+  }
+
+  .control-row {
+    display: flex;
+    gap: 1rem;
+  }
+
+  @media (max-width: 480px) {
+    .control-row {
+      flex-direction: column;
+    }
+  }
+</style>
+
+<script>
+  const nameInput = document.getElementById("vc-name") as HTMLInputElement;
+  const phoneInput = document.getElementById("vc-phone") as HTMLInputElement;
+  const emailInput = document.getElementById("vc-email") as HTMLInputElement;
+  const orgInput = document.getElementById("vc-org") as HTMLInputElement;
+  const urlInput = document.getElementById("vc-url") as HTMLInputElement;
+
+  function buildPayload(): string {
+    const name = nameInput.value.trim();
+    if (!name) return "";
+
+    const lines = ["BEGIN:VCARD", "VERSION:3.0", `N:${name};;;;`, `FN:${name}`];
+    if (phoneInput.value.trim()) lines.push(`TEL:${phoneInput.value.trim()}`);
+    if (emailInput.value.trim()) lines.push(`EMAIL:${emailInput.value.trim()}`);
+    if (orgInput.value.trim()) lines.push(`ORG:${orgInput.value.trim()}`);
+    if (urlInput.value.trim()) lines.push(`URL:${urlInput.value.trim()}`);
+    lines.push("END:VCARD");
+    return lines.join("\r\n");
+  }
+
+  function update() {
+    document.dispatchEvent(
+      new CustomEvent("zipizy:qr-payload", {
+        detail: { text: buildPayload() },
+      }),
+    );
+  }
+
+  [nameInput, phoneInput, emailInput, orgInput, urlInput].forEach((el) => {
+    el.addEventListener("input", update);
+  });
+
+  update();
+</script>

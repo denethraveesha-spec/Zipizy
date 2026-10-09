@@ -1,0 +1,64 @@
+---
+import ToolLayout from "../layouts/ToolLayout.astro";
+import ImageToPdfWidget from "../components/ImageToPdfWidget.astro";
+
+const howTo = [
+  {
+    name: "Add your JPG files",
+    text: "Click to choose one or more JPG or JPEG photos, or drag and drop them onto the drop zone.",
+  },
+  {
+    name: "Put them in order",
+    text: "If you're combining several photos or scanned pages, use the up and down arrows to set the order they'll appear in the PDF.",
+  },
+  {
+    name: "Convert and download",
+    text: "Click Convert to PDF & Download to get a single PDF file with one page per photo.",
+  },
+];
+
+const faqs = [
+  {
+    question: "Are my photos uploaded anywhere?",
+    answer:
+      "No. The JPG-to-PDF conversion happens entirely in your browser — each photo is embedded directly into a PDF using a client-side library, and the file never leaves your device.",
+  },
+  {
+    question: "Can I combine multiple JPG photos into one PDF?",
+    answer:
+      "Yes. Add as many JPG files as you need, reorder them with the arrow buttons, and they'll all be combined into a single multi-page PDF in that order — a common way to turn a set of scanned or photographed pages into one document.",
+  },
+  {
+    question: "Will converting to PDF reduce my photo's quality?",
+    answer:
+      "No. Your JPG's existing pixel data is embedded into the PDF as-is, without any additional recompression, so there's no extra quality loss from the conversion step itself.",
+  },
+  {
+    question: "What size will the PDF page be?",
+    answer:
+      "Each page is sized to match its photo's aspect ratio, scaled so the longer side is about 11 inches — similar to a standard printed page — rather than stretching or cropping your photo to fit a fixed page size.",
+  },
+];
+---
+
+<ToolLayout
+  title="JPG to PDF Converter — Free, No Sign-Up | Zipizy"
+  description="Convert JPG or JPEG photos to PDF, and combine multiple photos into one PDF file. Free, private, runs entirely in your browser."
+  toolName="JPG to PDF"
+  intro="Convert JPG photos to PDF, and combine several into one file — free, private, no sign-up required."
+  howTo={howTo}
+  faqs={faqs}
+  relatedLinks={[
+    { href: "/png-to-pdf", label: "PNG to PDF Converter" },
+    { href: "/heic-to-pdf", label: "HEIC to PDF Converter" },
+    { href: "/tools/pdf-merge", label: "PDF Merge" },
+    { href: "/tools/image-crop", label: "Image Cropper" },
+  ]}
+>
+  <ImageToPdfWidget
+    accept="image/jpeg"
+    format="jpg"
+    fileLabel="JPG"
+    outputName="zipizy-jpg-to-pdf"
+  />
+</ToolLayout>

@@ -1,0 +1,285 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+
+const howTo = [
+  {
+    name: "Enter your text",
+    text: "Type or paste the text you want to convert into the box below.",
+  },
+  {
+    name: "Pick a case style",
+    text: "Click any of the case buttons — UPPERCASE, lowercase, Title Case, Sentence case, camelCase, PascalCase, snake_case, or kebab-case — to convert your text instantly.",
+  },
+  {
+    name: "Copy the result",
+    text: "Click Copy to copy the converted text to your clipboard, or keep clicking other case buttons to try different styles.",
+  },
+];
+
+const faqs = [
+  {
+    question: "Does the case converter send my text anywhere?",
+    answer:
+      "No. All conversion happens locally in your browser using JavaScript. Nothing you type is uploaded, stored, or logged.",
+  },
+  {
+    question: "What's the difference between Title Case and Sentence case?",
+    answer:
+      "Title Case capitalizes the first letter of every word (common for headings), while Sentence case only capitalizes the first letter of each sentence, like normal prose.",
+  },
+  {
+    question: "Can I convert a multi-word phrase into camelCase or PascalCase?",
+    answer:
+      "Yes. The converter splits on spaces, hyphens, underscores, and existing camelCase boundaries, so 'user first name' becomes 'userFirstName' in camelCase or 'UserFirstName' in PascalCase.",
+  },
+  {
+    question: "Does it work on multiple lines at once?",
+    answer:
+      "Yes. UPPERCASE, lowercase, Title Case, and Sentence case apply across the whole text including line breaks. camelCase, PascalCase, snake_case, and kebab-case are applied line by line, since those formats are normally used for single identifiers.",
+  },
+];
+---
+
+<ToolLayout
+  title="Case Converter — Upper, Lower, Title, camelCase & More | Zipizy"
+  description="Convert text between UPPERCASE, lowercase, Title Case, Sentence case, camelCase, PascalCase, snake_case, and kebab-case. Free, private, no sign-up."
+  toolName="Case Converter"
+  intro="Convert text between UPPERCASE, lowercase, Title Case, camelCase, and more — free, private, no sign-up required."
+  howTo={howTo}
+  faqs={faqs}
+>
+  <div class="case-converter">
+    <textarea
+      id="cc-input"
+      placeholder="Type or paste your text here..."
+      rows="8"
+      aria-label="Text to convert"
+    ></textarea>
+
+    <div class="case-buttons">
+      <button type="button" class="case-btn" data-case="upper">
+        UPPERCASE
+      </button>
+      <button type="button" class="case-btn" data-case="lower">
+        lowercase
+      </button>
+      <button type="button" class="case-btn" data-case="title">
+        Title Case
+      </button>
+      <button type="button" class="case-btn" data-case="sentence">
+        Sentence case
+      </button>
+      <button type="button" class="case-btn" data-case="camel">
+        camelCase
+      </button>
+      <button type="button" class="case-btn" data-case="pascal">
+        PascalCase
+      </button>
+      <button type="button" class="case-btn" data-case="snake">
+        snake_case
+      </button>
+      <button type="button" class="case-btn" data-case="kebab">
+        kebab-case
+      </button>
+    </div>
+
+    <div class="actions">
+      <button id="cc-copy" type="button" class="copy-btn">
+        Copy
+      </button>
+      <button id="cc-clear" type="button" class="clear-btn">
+        Clear
+      </button>
+      <span id="cc-copied" class="copied-msg" hidden>
+        Copied!
+      </span>
+    </div>
+  </div>
+
+  <style>
+    .case-converter {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    textarea {
+      width: 100%;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 0.75rem;
+      font-family: var(--font-sans);
+      font-size: 1rem;
+      resize: vertical;
+    }
+
+    textarea:focus {
+      outline: 2px solid var(--color-primary);
+      outline-offset: -1px;
+    }
+
+    .case-buttons {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 0.6rem;
+    }
+
+    .case-btn {
+      background: var(--bg-primary);
+      color: var(--color-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.6rem 0.75rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    .case-btn:hover {
+      border-color: var(--color-primary);
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .copy-btn {
+      background: var(--color-accent);
+      color: var(--color-accent-contrast);
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 0.6rem 1.25rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .copy-btn:hover {
+      opacity: 0.9;
+    }
+
+    .clear-btn {
+      background: none;
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.6rem 1.25rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .copied-msg {
+      color: var(--color-success);
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+  </style>
+
+  <script>
+    const input = document.getElementById("cc-input") as HTMLTextAreaElement;
+    const clearBtn = document.getElementById("cc-clear")!;
+    const copyBtn = document.getElementById("cc-copy")!;
+    const copiedMsg = document.getElementById("cc-copied")!;
+    const caseButtons =
+      document.querySelectorAll<HTMLButtonElement>(".case-btn");
+
+    function splitWords(line: string): string[] {
+      return line
+        .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+        .replace(/[_-]+/g, " ")
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean);
+    }
+
+    function toCamel(line: string): string {
+      const words = splitWords(line).map((w) => w.toLowerCase());
+      if (words.length === 0) return "";
+      return (
+        words[0] +
+        words
+          .slice(1)
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+          .join("")
+      );
+    }
+
+    function toPascal(line: string): string {
+      return splitWords(line)
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+        .join("");
+    }
+
+    function toSnake(line: string): string {
+      return splitWords(line)
+        .map((w) => w.toLowerCase())
+        .join("_");
+    }
+
+    function toKebab(line: string): string {
+      return splitWords(line)
+        .map((w) => w.toLowerCase())
+        .join("-");
+    }
+
+    function perLine(text: string, fn: (line: string) => string): string {
+      return text.split("\n").map(fn).join("\n");
+    }
+
+    function convert(text: string, mode: string): string {
+      switch (mode) {
+        case "upper":
+          return text.toUpperCase();
+        case "lower":
+          return text.toLowerCase();
+        case "title":
+          return text
+            .toLowerCase()
+            .replace(/\b\w+\b/g, (w) => w.charAt(0).toUpperCase() + w.slice(1));
+        case "sentence":
+          return text
+            .toLowerCase()
+            .replace(/(^\s*\w|[.!?]\s+\w)/g, (m) => m.toUpperCase());
+        case "camel":
+          return perLine(text, toCamel);
+        case "pascal":
+          return perLine(text, toPascal);
+        case "snake":
+          return perLine(text, toSnake);
+        case "kebab":
+          return perLine(text, toKebab);
+        default:
+          return text;
+      }
+    }
+
+    caseButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const mode = btn.dataset.case ?? "";
+        input.value = convert(input.value, mode);
+        input.focus();
+      });
+    });
+
+    clearBtn.addEventListener("click", () => {
+      input.value = "";
+      input.focus();
+    });
+
+    copyBtn.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(input.value);
+        copiedMsg.hidden = false;
+        setTimeout(() => {
+          copiedMsg.hidden = true;
+        }, 1500);
+      } catch (e) {
+        input.select();
+        document.execCommand("copy");
+      }
+    });
+  </script>
+</ToolLayout>

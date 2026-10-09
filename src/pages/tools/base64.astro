@@ -1,0 +1,325 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+
+const howTo = [
+  {
+    name: "Enter your text",
+    text: "Type or paste text into the input box — plain text to encode, or a Base64 string to decode.",
+  },
+  {
+    name: "Encode or decode",
+    text: "Click Encode to convert text to Base64, or Decode to convert Base64 back to text. The result appears in the output box.",
+  },
+  {
+    name: "Copy or swap",
+    text: "Copy the result, or click Swap to move the output back into the input and run it the other direction.",
+  },
+];
+
+const faqs = [
+  {
+    question: "Is my text uploaded anywhere?",
+    answer:
+      "No. Encoding and decoding both happen locally using your browser's built-in Base64 functions. Nothing is sent to a server, which matters if you're encoding tokens, credentials, or other sensitive strings.",
+  },
+  {
+    question: "Does this handle emoji and non-English text correctly?",
+    answer:
+      "Yes. Text is converted to UTF-8 bytes before encoding, so accented letters, CJK characters, and emoji round-trip correctly instead of breaking, which is a common issue with naive Base64 implementations.",
+  },
+  {
+    question: "What is URL-safe Base64?",
+    answer:
+      "Standard Base64 uses + and / characters and = padding, which can break URLs and filenames. URL-safe Base64 replaces + with -, / with _, and drops the padding. Toggle the URL-safe option to use this variant.",
+  },
+  {
+    question: "Why does decoding fail with 'invalid character'?",
+    answer:
+      "This means the input isn't valid Base64 for the selected mode, often because it uses URL-safe characters while standard mode is selected (or vice versa) or the text was truncated. The tool automatically retries with the other variant before showing an error.",
+  },
+];
+---
+
+<ToolLayout
+  title="Base64 Encoder & Decoder — Free Online Tool | Zipizy"
+  description="Encode text to Base64 or decode Base64 back to text, with full Unicode and URL-safe support. Free, private, runs entirely in your browser."
+  toolName="Base64 Encoder/Decoder"
+  intro="Encode text to Base64 or decode Base64 back to text — free, private, no sign-up required."
+  howTo={howTo}
+  faqs={faqs}
+>
+  <div class="b64-tool">
+    <div class="field">
+      <label for="b64-input">Input</label>
+      <textarea
+        id="b64-input"
+        rows="6"
+        placeholder="Type text to encode, or a Base64 string to decode..."
+        aria-label="Input text"
+        spellcheck="false"
+      ></textarea>
+    </div>
+
+    <div class="controls">
+      <button id="b64-encode" type="button" class="action-btn primary">
+        Encode →
+      </button>
+      <button id="b64-decode" type="button" class="action-btn primary">
+        Decode →
+      </button>
+      <button
+        id="b64-swap"
+        type="button"
+        class="action-btn"
+        title="Swap output into input"
+      >
+        ⇅ Swap
+      </button>
+      <label class="urlsafe-toggle">
+        <input type="checkbox" id="b64-urlsafe" /> URL-safe
+      </label>
+    </div>
+
+    <p id="b64-status" class="status" hidden></p>
+
+    <div class="field">
+      <label for="b64-output">Output</label>
+      <textarea
+        id="b64-output"
+        rows="6"
+        aria-label="Output result"
+        spellcheck="false"
+        readonly
+      ></textarea>
+    </div>
+
+    <div class="actions">
+      <button id="b64-copy" type="button" class="action-btn">
+        Copy output
+      </button>
+      <button id="b64-clear" type="button" class="action-btn ghost">
+        Clear
+      </button>
+      <span id="b64-copied" class="copied-msg" hidden>
+        Copied!
+      </span>
+    </div>
+  </div>
+
+  <style>
+    .b64-tool {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .field label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    textarea {
+      width: 100%;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 0.75rem;
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      resize: vertical;
+    }
+
+    textarea:focus {
+      outline: 2px solid var(--color-primary);
+      outline-offset: -1px;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .action-btn {
+      background: var(--bg-primary);
+      color: var(--color-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.55rem 1rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    .action-btn:hover {
+      border-color: var(--color-primary);
+    }
+
+    .action-btn.primary {
+      background: var(--color-accent);
+      color: var(--color-accent-contrast);
+      border: none;
+    }
+
+    .action-btn.primary:hover {
+      opacity: 0.9;
+    }
+
+    .action-btn.ghost {
+      color: var(--text-secondary);
+    }
+
+    .urlsafe-toggle {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .status {
+      margin: 0;
+      font-size: 0.85rem;
+      font-family: var(--font-mono);
+      padding: 0.6rem 0.75rem;
+      border-radius: var(--radius-sm);
+    }
+
+    .status.ok {
+      color: var(--color-success);
+      background: color-mix(in srgb, var(--color-success) 12%, transparent);
+    }
+
+    .status.error {
+      color: var(--color-accent);
+      background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .copied-msg {
+      color: var(--color-success);
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+  </style>
+
+  <script>
+    const input = document.getElementById("b64-input") as HTMLTextAreaElement;
+    const output = document.getElementById("b64-output") as HTMLTextAreaElement;
+    const urlSafeToggle = document.getElementById(
+      "b64-urlsafe",
+    ) as HTMLInputElement;
+    const status = document.getElementById(
+      "b64-status",
+    ) as HTMLParagraphElement;
+    const encodeBtn = document.getElementById("b64-encode")!;
+    const decodeBtn = document.getElementById("b64-decode")!;
+    const swapBtn = document.getElementById("b64-swap")!;
+    const copyBtn = document.getElementById("b64-copy")!;
+    const clearBtn = document.getElementById("b64-clear")!;
+    const copiedMsg = document.getElementById("b64-copied")!;
+
+    function showStatus(message: string, ok: boolean) {
+      status.textContent = message;
+      status.hidden = false;
+      status.classList.toggle("ok", ok);
+      status.classList.toggle("error", !ok);
+    }
+
+    function encodeBase64(str: string, urlSafe: boolean): string {
+      const bytes = new TextEncoder().encode(str);
+      let binary = "";
+      bytes.forEach((b) => (binary += String.fromCharCode(b)));
+      let b64 = btoa(binary);
+      if (urlSafe) {
+        b64 = b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+      }
+      return b64;
+    }
+
+    function decodeBase64Raw(b64: string, urlSafe: boolean): string {
+      let s = b64.trim();
+      if (urlSafe) {
+        s = s.replace(/-/g, "+").replace(/_/g, "/");
+        while (s.length % 4 !== 0) s += "=";
+      }
+      const binary = atob(s);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+    }
+
+    encodeBtn.addEventListener("click", () => {
+      try {
+        output.value = encodeBase64(input.value, urlSafeToggle.checked);
+        showStatus("Encoded successfully.", true);
+      } catch (e) {
+        showStatus(`Encoding failed: ${(e as Error).message}`, false);
+      }
+    });
+
+    decodeBtn.addEventListener("click", () => {
+      const wanted = urlSafeToggle.checked;
+      try {
+        output.value = decodeBase64Raw(input.value, wanted);
+        showStatus("Decoded successfully.", true);
+        return;
+      } catch (e) {
+        try {
+          output.value = decodeBase64Raw(input.value, !wanted);
+          urlSafeToggle.checked = !wanted;
+          showStatus(
+            `Decoded successfully (auto-detected ${!wanted ? "URL-safe" : "standard"} Base64).`,
+            true,
+          );
+        } catch (e2) {
+          output.value = "";
+          showStatus(`Invalid Base64: ${(e as Error).message}`, false);
+        }
+      }
+    });
+
+    swapBtn.addEventListener("click", () => {
+      const temp = input.value;
+      input.value = output.value;
+      output.value = temp;
+      status.hidden = true;
+    });
+
+    clearBtn.addEventListener("click", () => {
+      input.value = "";
+      output.value = "";
+      status.hidden = true;
+      input.focus();
+    });
+
+    copyBtn.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(output.value);
+        copiedMsg.hidden = false;
+        setTimeout(() => {
+          copiedMsg.hidden = true;
+        }, 1500);
+      } catch (e) {
+        output.select();
+        document.execCommand("copy");
+      }
+    });
+  </script>
+</ToolLayout>

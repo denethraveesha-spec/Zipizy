@@ -1,0 +1,313 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+
+const howTo = [
+  {
+    name: "Set the quantity",
+    text: "Enter how many UUIDs you need, from 1 up to 1,000 at a time.",
+  },
+  {
+    name: "Choose a format",
+    text: "Optionally switch to uppercase, strip the hyphens, or wrap each UUID in curly braces (the GUID style used by some Windows APIs).",
+  },
+  {
+    name: "Generate and copy",
+    text: "Click Generate to create a fresh batch. Copy an individual UUID with its button, or copy the whole list at once.",
+  },
+];
+
+const faqs = [
+  {
+    question: "Are these UUIDs generated on a server?",
+    answer:
+      "No. Every UUID is generated locally using your browser's built-in crypto.randomUUID() API, which draws from the operating system's cryptographically secure random number generator. Nothing is sent anywhere.",
+  },
+  {
+    question: "What is a version 4 UUID?",
+    answer:
+      "A UUID (Universally Unique Identifier) is a 128-bit value typically shown as 32 hex digits in five groups, like 3fa85f64-5717-4562-b3fc-2c963f66afa6. Version 4 means it's generated from random bits rather than derived from a timestamp or namespace, which is why it's the most common choice for general-purpose unique IDs.",
+  },
+  {
+    question: "How likely is a collision between two v4 UUIDs?",
+    answer:
+      "Extremely unlikely. A v4 UUID has 122 random bits, so you'd need to generate roughly a billion UUIDs per second for about 85 years before the chance of a single collision reaches 50%. For practical purposes, treat them as unique.",
+  },
+  {
+    question:
+      "What's the difference between the standard format and the braces format?",
+    answer:
+      "The braces format ({3fa85f64-5717-4562-b3fc-2c963f66afa6}) is the GUID style used by some Windows APIs and COM registry entries. The plain format without braces is what's used almost everywhere else, including databases, APIs, and most programming languages.",
+  },
+];
+---
+
+<ToolLayout
+  title="UUID Generator — Bulk v4 UUIDs Online | Zipizy"
+  description="Generate random version 4 UUIDs in bulk, with uppercase, no-hyphen, and braces formatting options. Free, private, runs entirely in your browser."
+  toolName="UUID Generator"
+  intro="Generate random v4 UUIDs in bulk, with format options — free, private, no sign-up required."
+  howTo={howTo}
+  faqs={faqs}
+>
+  <div class="uuid-tool">
+    <div class="controls">
+      <label class="qty-label">
+        Quantity
+        <input id="uuid-qty" type="number" min="1" max="1000" value="5" />
+      </label>
+      <label class="checkbox-label">
+        <input type="checkbox" id="uuid-upper" /> Uppercase
+      </label>
+      <label class="checkbox-label">
+        <input type="checkbox" id="uuid-nohyphen" /> No hyphens
+      </label>
+      <label class="checkbox-label">
+        <input type="checkbox" id="uuid-braces" /> Braces
+      </label>
+      <button id="uuid-generate" type="button" class="action-btn primary">
+        Generate
+      </button>
+    </div>
+
+    <p id="uuid-status" class="status error" hidden></p>
+
+    <ul id="uuid-list" class="uuid-list"></ul>
+
+    <div class="actions">
+      <button id="uuid-copy-all" type="button" class="action-btn">
+        Copy all
+      </button>
+      <span id="uuid-copied" class="copied-msg" hidden>
+        Copied!
+      </span>
+    </div>
+  </div>
+
+  <style>
+    .uuid-tool {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .qty-label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .qty-label input {
+      width: 5rem;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.4rem 0.5rem;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .action-btn {
+      background: var(--bg-primary);
+      color: var(--color-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.55rem 1.1rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    .action-btn:hover {
+      border-color: var(--color-primary);
+    }
+
+    .action-btn.primary {
+      background: var(--color-accent);
+      color: var(--color-accent-contrast);
+      border: none;
+      margin-left: auto;
+    }
+
+    .action-btn.primary:hover {
+      opacity: 0.9;
+    }
+
+    .status {
+      margin: 0;
+      font-size: 0.85rem;
+      padding: 0.6rem 0.75rem;
+      border-radius: var(--radius-sm);
+    }
+
+    .status.error {
+      color: var(--color-accent);
+      background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+    }
+
+    .uuid-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      max-height: 360px;
+      overflow-y: auto;
+    }
+
+    :global(.uuid-item) {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.5rem 0.75rem;
+    }
+
+    :global(.uuid-item .uuid-text) {
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      word-break: break-all;
+    }
+
+    :global(.uuid-item .uuid-copy-btn) {
+      flex-shrink: 0;
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      border-radius: var(--radius-sm);
+      padding: 0.3rem 0.6rem;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+
+    :global(.uuid-item .uuid-copy-btn:hover) {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .copied-msg {
+      color: var(--color-success);
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+  </style>
+
+  <script>
+    const qtyInput = document.getElementById("uuid-qty") as HTMLInputElement;
+    const upperCheckbox = document.getElementById(
+      "uuid-upper",
+    ) as HTMLInputElement;
+    const noHyphenCheckbox = document.getElementById(
+      "uuid-nohyphen",
+    ) as HTMLInputElement;
+    const bracesCheckbox = document.getElementById(
+      "uuid-braces",
+    ) as HTMLInputElement;
+    const generateBtn = document.getElementById("uuid-generate")!;
+    const copyAllBtn = document.getElementById("uuid-copy-all")!;
+    const copiedMsg = document.getElementById("uuid-copied")!;
+    const list = document.getElementById("uuid-list")!;
+    const status = document.getElementById(
+      "uuid-status",
+    ) as HTMLParagraphElement;
+
+    function formatUuid(uuid: string): string {
+      let u = uuid;
+      if (noHyphenCheckbox.checked) u = u.replace(/-/g, "");
+      if (upperCheckbox.checked) u = u.toUpperCase();
+      if (bracesCheckbox.checked) u = `{${u}}`;
+      return u;
+    }
+
+    async function copyText(text: string) {
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch (e) {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+      }
+    }
+
+    function flashCopied() {
+      copiedMsg.hidden = false;
+      setTimeout(() => {
+        copiedMsg.hidden = true;
+      }, 1500);
+    }
+
+    function generate() {
+      const qty = Math.floor(Number(qtyInput.value));
+      if (!Number.isFinite(qty) || qty < 1 || qty > 1000) {
+        status.textContent = "Enter a quantity between 1 and 1000.";
+        status.hidden = false;
+        return;
+      }
+      status.hidden = true;
+
+      list.innerHTML = "";
+      for (let i = 0; i < qty; i++) {
+        const uuid = formatUuid(crypto.randomUUID());
+        const li = document.createElement("li");
+        li.className = "uuid-item";
+
+        const span = document.createElement("span");
+        span.className = "uuid-text";
+        span.textContent = uuid;
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "uuid-copy-btn";
+        btn.textContent = "Copy";
+        btn.addEventListener("click", () => {
+          copyText(uuid);
+          flashCopied();
+        });
+
+        li.appendChild(span);
+        li.appendChild(btn);
+        list.appendChild(li);
+      }
+    }
+
+    generateBtn.addEventListener("click", generate);
+    copyAllBtn.addEventListener("click", () => {
+      const items = Array.from(list.querySelectorAll(".uuid-text")).map(
+        (el) => el.textContent ?? "",
+      );
+      copyText(items.join("\n"));
+      flashCopied();
+    });
+
+    generate();
+  </script>
+</ToolLayout>

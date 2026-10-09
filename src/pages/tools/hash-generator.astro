@@ -1,0 +1,428 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+
+const howTo = [
+  {
+    name: "Pick a mode",
+    text: "Use the Text tab to hash typed or pasted text, or the File tab to hash a file from your device.",
+  },
+  {
+    name: "Choose an algorithm",
+    text: "Select SHA-256 (the default), SHA-1, SHA-384, or SHA-512 depending on what you need to match.",
+  },
+  {
+    name: "Verify against an expected hash",
+    text: "Paste a known-good hash into the Expected hash field to instantly see whether it matches — useful for verifying downloads.",
+  },
+];
+
+const faqs = [
+  {
+    question: "Is my file or text uploaded to a server?",
+    answer:
+      "No. Hashing runs entirely in your browser using the Web Crypto API (crypto.subtle), the same trusted engine browsers use for HTTPS. Files are read locally and never leave your device.",
+  },
+  {
+    question: "Why would I hash a file?",
+    answer:
+      "The most common reason is integrity verification: after downloading a file, you can hash it and compare the result to a checksum published by the source to confirm the file wasn't corrupted or tampered with in transit.",
+  },
+  {
+    question: "Which algorithm should I use?",
+    answer:
+      "SHA-256 is the standard choice for most modern use cases (checksums, certificates, blockchain). SHA-1 is older and no longer considered collision-resistant for security purposes, though it's still used for basic integrity checks. SHA-384 and SHA-512 offer a larger output for higher security margins.",
+  },
+  {
+    question: "Is there a file size limit?",
+    answer:
+      "No hard limit is enforced, but the entire file is loaded into memory to compute the hash, so very large files (multiple gigabytes) may be slow or use significant browser memory depending on your device.",
+  },
+];
+---
+
+<ToolLayout
+  title="SHA-256 Hash Generator — Text & File Checksums | Zipizy"
+  description="Generate SHA-256, SHA-1, SHA-384, or SHA-512 hashes from text or files, with instant checksum verification. Free, private, runs in your browser."
+  toolName="SHA-256 Hash Generator"
+  intro="Generate SHA-256 and other hashes from text or files — free, private, no sign-up required."
+  howTo={howTo}
+  faqs={faqs}
+>
+  <div class="hash-tool">
+    <div class="tabs">
+      <button type="button" class="tab-btn active" data-tab="text">
+        Text
+      </button>
+      <button type="button" class="tab-btn" data-tab="file">
+        File
+      </button>
+    </div>
+
+    <div class="algo-row">
+      <label class="algo-label">
+        Algorithm
+        <select id="hash-algo">
+          <option value="SHA-256" selected>
+            SHA-256
+          </option>
+          <option value="SHA-1">SHA-1</option>
+          <option value="SHA-384">SHA-384</option>
+          <option value="SHA-512">SHA-512</option>
+        </select>
+      </label>
+      <label class="checkbox-label">
+        <input type="checkbox" id="hash-upper" /> Uppercase
+      </label>
+    </div>
+
+    <div class="panel" data-panel="text">
+      <textarea
+        id="hash-text"
+        rows="6"
+        placeholder="Type or paste text to hash..."
+        aria-label="Text to hash"
+        spellcheck="false"
+      ></textarea>
+    </div>
+
+    <div class="panel" data-panel="file" hidden>
+      <input id="hash-file" type="file" aria-label="File to hash" />
+      <p id="hash-file-info" class="file-info" hidden></p>
+    </div>
+
+    <div class="field">
+      <label for="hash-output">Hash</label>
+      <div class="output-row">
+        <input
+          id="hash-output"
+          type="text"
+          readonly
+          aria-label="Computed hash"
+        />
+        <button id="hash-copy" type="button" class="action-btn">
+          Copy
+        </button>
+      </div>
+      <span id="hash-copied" class="copied-msg" hidden>
+        Copied!
+      </span>
+    </div>
+
+    <div class="field">
+      <label for="hash-expected">
+        Expected hash (optional, for verification)
+      </label>
+      <input
+        id="hash-expected"
+        type="text"
+        placeholder="Paste a known hash to compare against..."
+        spellcheck="false"
+      />
+      <p id="hash-match" class="status" hidden></p>
+    </div>
+  </div>
+
+  <style>
+    .hash-tool {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-weight: 600;
+      padding: 0.5rem 0.25rem;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+    }
+
+    .tab-btn.active {
+      color: var(--color-primary);
+      border-bottom-color: var(--color-primary);
+    }
+
+    .algo-row {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+    }
+
+    .algo-label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .algo-label select {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.4rem 0.5rem;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .panel {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .panel[hidden] {
+      display: none;
+    }
+
+    textarea {
+      width: 100%;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 0.75rem;
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      resize: vertical;
+    }
+
+    textarea:focus,
+    input[type="text"]:focus {
+      outline: 2px solid var(--color-primary);
+      outline-offset: -1px;
+    }
+
+    #hash-file {
+      color: var(--text-primary);
+    }
+
+    .file-info {
+      margin: 0;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .field label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .output-row {
+      display: flex;
+      gap: 0.6rem;
+    }
+
+    #hash-output,
+    #hash-expected {
+      flex: 1;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.6rem 0.75rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+    }
+
+    .action-btn {
+      background: var(--bg-primary);
+      color: var(--color-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.55rem 1rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    .action-btn:hover {
+      border-color: var(--color-primary);
+    }
+
+    .copied-msg {
+      color: var(--color-success);
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .status {
+      margin: 0;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 0.5rem 0.75rem;
+      border-radius: var(--radius-sm);
+    }
+
+    .status.ok {
+      color: var(--color-success);
+      background: color-mix(in srgb, var(--color-success) 12%, transparent);
+    }
+
+    .status.error {
+      color: var(--color-accent);
+      background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+    }
+  </style>
+
+  <script>
+    const tabButtons = document.querySelectorAll<HTMLButtonElement>(".tab-btn");
+    const panels = document.querySelectorAll<HTMLElement>(".panel");
+
+    tabButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        tabButtons.forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        const target = btn.dataset.tab;
+        panels.forEach((p) => {
+          p.hidden = p.dataset.panel !== target;
+        });
+        compute();
+      });
+    });
+
+    const algoSelect = document.getElementById(
+      "hash-algo",
+    ) as HTMLSelectElement;
+    const upperCheckbox = document.getElementById(
+      "hash-upper",
+    ) as HTMLInputElement;
+    const textInput = document.getElementById(
+      "hash-text",
+    ) as HTMLTextAreaElement;
+    const fileInput = document.getElementById("hash-file") as HTMLInputElement;
+    const fileInfo = document.getElementById(
+      "hash-file-info",
+    ) as HTMLParagraphElement;
+    const output = document.getElementById("hash-output") as HTMLInputElement;
+    const copyBtn = document.getElementById("hash-copy")!;
+    const copiedMsg = document.getElementById("hash-copied")!;
+    const expectedInput = document.getElementById(
+      "hash-expected",
+    ) as HTMLInputElement;
+    const matchStatus = document.getElementById(
+      "hash-match",
+    ) as HTMLParagraphElement;
+
+    function activeMode(): "text" | "file" {
+      const activeBtn =
+        document.querySelector<HTMLButtonElement>(".tab-btn.active");
+      return (activeBtn?.dataset.tab as "text" | "file") ?? "text";
+    }
+
+    function bufferToHex(buffer: ArrayBuffer): string {
+      return Array.from(new Uint8Array(buffer))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+    }
+
+    function applyCase(hex: string): string {
+      return upperCheckbox.checked ? hex.toUpperCase() : hex;
+    }
+
+    function updateMatch() {
+      const expected = expectedInput.value.trim().toLowerCase();
+      const actual = output.value.trim().toLowerCase();
+      if (!expected || !actual) {
+        matchStatus.hidden = true;
+        return;
+      }
+      matchStatus.hidden = false;
+      if (expected === actual) {
+        matchStatus.textContent = "Match — the hash is identical.";
+        matchStatus.classList.add("ok");
+        matchStatus.classList.remove("error");
+      } else {
+        matchStatus.textContent = "No match — the hash is different.";
+        matchStatus.classList.add("error");
+        matchStatus.classList.remove("ok");
+      }
+    }
+
+    let currentFile: File | null = null;
+    let computeToken = 0;
+
+    async function compute() {
+      const token = ++computeToken;
+      const algo = algoSelect.value;
+
+      let hex = "";
+      if (activeMode() === "text") {
+        const bytes = new TextEncoder().encode(textInput.value);
+        const digest = await crypto.subtle.digest(algo, bytes);
+        if (token !== computeToken) return;
+        hex = bufferToHex(digest);
+      } else if (currentFile) {
+        const buffer = await currentFile.arrayBuffer();
+        const digest = await crypto.subtle.digest(algo, buffer);
+        if (token !== computeToken) return;
+        hex = bufferToHex(digest);
+      }
+
+      output.value = hex ? applyCase(hex) : "";
+      updateMatch();
+    }
+
+    function formatBytes(bytes: number): string {
+      if (bytes < 1024) return `${bytes} B`;
+      if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+      return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+    }
+
+    fileInput.addEventListener("change", () => {
+      currentFile = fileInput.files?.[0] ?? null;
+      if (currentFile) {
+        fileInfo.textContent = `${currentFile.name} — ${formatBytes(currentFile.size)}`;
+        fileInfo.hidden = false;
+      } else {
+        fileInfo.hidden = true;
+      }
+      compute();
+    });
+
+    textInput.addEventListener("input", compute);
+    algoSelect.addEventListener("change", compute);
+    upperCheckbox.addEventListener("change", compute);
+    expectedInput.addEventListener("input", updateMatch);
+
+    copyBtn.addEventListener("click", async () => {
+      if (!output.value) return;
+      try {
+        await navigator.clipboard.writeText(output.value);
+        copiedMsg.hidden = false;
+        setTimeout(() => {
+          copiedMsg.hidden = true;
+        }, 1500);
+      } catch (e) {
+        output.select();
+        document.execCommand("copy");
+      }
+    });
+
+    compute();
+  </script>
+</ToolLayout>

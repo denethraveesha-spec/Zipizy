@@ -1,0 +1,461 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+
+const howTo = [
+  {
+    name: "Upload an image",
+    text: "Click to choose a JPG, PNG, or WebP file, or drag and drop it onto the drop zone.",
+  },
+  {
+    name: "Adjust the crop box",
+    text: "Drag the corners to resize, drag inside to move, or pick an aspect ratio preset to constrain the shape.",
+  },
+  {
+    name: "Download the result",
+    text: "Choose an output format and click Download to save the cropped image to your device.",
+  },
+];
+
+const faqs = [
+  {
+    question: "Is my image uploaded to a server?",
+    answer:
+      "No. Cropping happens entirely in your browser using canvas rendering. Your image is never sent anywhere — it's read from your device and the result is generated locally.",
+  },
+  {
+    question: "What's the difference between the aspect ratio presets?",
+    answer:
+      "Free lets you drag the crop box to any shape. The numeric presets (1:1, 4:3, 16:9, 3:2) lock the crop box to that width-to-height ratio, which is useful for profile photos (1:1), standard photo prints (4:3, 3:2), or widescreen thumbnails (16:9).",
+  },
+  {
+    question: "Will cropping reduce my image quality?",
+    answer:
+      "No quality is lost from the cropping itself — pixels within the crop box are copied as-is. Choosing JPEG as the output format does apply standard JPEG compression, so pick PNG if you need a lossless result.",
+  },
+  {
+    question: "Can I rotate the image before cropping?",
+    answer:
+      "Yes, use the rotate left and right buttons to rotate in 90-degree steps before you finalize your crop area.",
+  },
+];
+---
+
+<ToolLayout
+  title="Image Cropper — Crop Photos Online for Free | Zipizy"
+  description="Crop and rotate an image with aspect ratio presets, entirely in your browser. Free, private, no sign-up, nothing uploaded."
+  toolName="Image Cropper"
+  intro="Crop and rotate an image with aspect ratio presets — free, private, no sign-up required."
+  howTo={howTo}
+  faqs={faqs}
+>
+  <div class="crop-tool">
+    <label id="crop-drop" for="crop-input" class="drop-zone">
+      <span class="drop-title">
+        Click to add an image, or drag and drop it here
+      </span>
+      <span class="drop-sub">JPG, PNG, or WebP</span>
+      <input
+        id="crop-input"
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        hidden
+      />
+    </label>
+
+    <p id="crop-status" class="status error" hidden></p>
+
+    <div id="crop-panel" class="panel" hidden>
+      <div class="image-wrap">
+        <img id="crop-image" alt="Image to crop" />
+      </div>
+
+      <div class="toolbar">
+        <div class="ratio-group">
+          <span class="group-label">Aspect ratio</span>
+          <div class="ratio-buttons">
+            <button type="button" class="ratio-btn active" data-ratio="NaN">
+              Free
+            </button>
+            <button type="button" class="ratio-btn" data-ratio="1">
+              1:1
+            </button>
+            <button
+              type="button"
+              class="ratio-btn"
+              data-ratio="1.3333333333333333"
+            >
+              4:3
+            </button>
+            <button
+              type="button"
+              class="ratio-btn"
+              data-ratio="1.7777777777777777"
+            >
+              16:9
+            </button>
+            <button type="button" class="ratio-btn" data-ratio="1.5">
+              3:2
+            </button>
+          </div>
+        </div>
+
+        <div class="action-group">
+          <button
+            id="crop-rotate-left"
+            type="button"
+            class="action-btn"
+            title="Rotate left"
+          >
+            ⟲
+          </button>
+          <button
+            id="crop-rotate-right"
+            type="button"
+            class="action-btn"
+            title="Rotate right"
+          >
+            ⟳
+          </button>
+          <button id="crop-reset" type="button" class="action-btn">
+            Reset
+          </button>
+        </div>
+      </div>
+
+      <div class="download-row">
+        <label class="format-label">
+          Format
+          <select id="crop-format">
+            <option value="image/png" selected>
+              PNG
+            </option>
+            <option value="image/jpeg">JPEG</option>
+            <option value="image/webp">WebP</option>
+          </select>
+        </label>
+        <button id="crop-download" type="button" class="action-btn primary">
+          Download
+        </button>
+        <button id="crop-choose-new" type="button" class="action-btn ghost">
+          Choose a different image
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .crop-tool {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .drop-zone {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-lg);
+      padding: 2rem 1rem;
+      cursor: pointer;
+      text-align: center;
+      transition:
+        border-color 0.15s ease,
+        background 0.15s ease;
+    }
+
+    .drop-zone:hover,
+    .drop-zone.drag-over {
+      border-color: var(--color-primary);
+      background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+    }
+
+    .drop-title {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .drop-sub {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .status {
+      margin: 0;
+      font-size: 0.85rem;
+      padding: 0.6rem 0.75rem;
+      border-radius: var(--radius-sm);
+    }
+
+    .status.error {
+      color: var(--color-accent);
+      background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+    }
+
+    .status.ok {
+      color: var(--color-success);
+      background: color-mix(in srgb, var(--color-success) 12%, transparent);
+    }
+
+    .panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .image-wrap {
+      max-height: 480px;
+      overflow: hidden;
+      border-radius: var(--radius-md);
+      background: var(--bg-primary);
+    }
+
+    .image-wrap img {
+      display: block;
+      max-width: 100%;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .group-label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 0.35rem;
+    }
+
+    .ratio-buttons {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+    }
+
+    .ratio-btn {
+      background: var(--bg-primary);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0.35rem 0.85rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .ratio-btn:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+
+    .ratio-btn.active {
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+      color: var(--color-primary-contrast);
+    }
+
+    .action-group {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .action-btn {
+      background: var(--bg-primary);
+      color: var(--color-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.55rem 0.9rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    .action-btn:hover {
+      border-color: var(--color-primary);
+    }
+
+    .action-btn.ghost {
+      color: var(--text-secondary);
+    }
+
+    .action-btn.primary {
+      background: var(--color-accent);
+      color: var(--color-accent-contrast);
+      border: none;
+    }
+
+    .action-btn.primary:hover {
+      opacity: 0.9;
+    }
+
+    .download-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.75rem;
+      border-top: 1px solid var(--border);
+      padding-top: 1rem;
+    }
+
+    .format-label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .format-label select {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.4rem 0.6rem;
+    }
+  </style>
+
+  <script>
+    import "cropperjs/dist/cropper.css";
+    import type CropperType from "cropperjs";
+
+    const dropZone = document.getElementById("crop-drop") as HTMLLabelElement;
+    const fileInput = document.getElementById("crop-input") as HTMLInputElement;
+    const status = document.getElementById(
+      "crop-status",
+    ) as HTMLParagraphElement;
+    const panel = document.getElementById("crop-panel") as HTMLDivElement;
+    const image = document.getElementById("crop-image") as HTMLImageElement;
+    const ratioButtons =
+      document.querySelectorAll<HTMLButtonElement>(".ratio-btn");
+    const rotateLeftBtn = document.getElementById("crop-rotate-left")!;
+    const rotateRightBtn = document.getElementById("crop-rotate-right")!;
+    const resetBtn = document.getElementById("crop-reset")!;
+    const formatSelect = document.getElementById(
+      "crop-format",
+    ) as HTMLSelectElement;
+    const downloadBtn = document.getElementById("crop-download")!;
+    const chooseNewBtn = document.getElementById("crop-choose-new")!;
+
+    let cropper: CropperType | null = null;
+    let currentObjectUrl: string | null = null;
+
+    function showError(message: string) {
+      status.textContent = message;
+      status.hidden = false;
+    }
+
+    async function loadFile(file: File) {
+      if (!file.type.startsWith("image/")) {
+        showError("Please choose an image file.");
+        return;
+      }
+
+      status.hidden = true;
+      const { default: Cropper } = await import("cropperjs");
+
+      if (cropper) {
+        cropper.destroy();
+        cropper = null;
+      }
+      if (currentObjectUrl) {
+        URL.revokeObjectURL(currentObjectUrl);
+      }
+
+      currentObjectUrl = URL.createObjectURL(file);
+      image.src = currentObjectUrl;
+      panel.hidden = false;
+
+      ratioButtons.forEach((b) => b.classList.remove("active"));
+      ratioButtons[0].classList.add("active");
+
+      cropper = new Cropper(image, {
+        viewMode: 1,
+        autoCropArea: 0.9,
+        aspectRatio: NaN,
+        background: false,
+      });
+    }
+
+    fileInput.addEventListener("change", () => {
+      if (fileInput.files?.[0]) loadFile(fileInput.files[0]);
+      fileInput.value = "";
+    });
+
+    ["dragenter", "dragover"].forEach((evt) => {
+      dropZone.addEventListener(evt, (e) => {
+        e.preventDefault();
+        dropZone.classList.add("drag-over");
+      });
+    });
+
+    ["dragleave", "drop"].forEach((evt) => {
+      dropZone.addEventListener(evt, (e) => {
+        e.preventDefault();
+        dropZone.classList.remove("drag-over");
+      });
+    });
+
+    dropZone.addEventListener("drop", (e) => {
+      const file = (e as DragEvent).dataTransfer?.files?.[0];
+      if (file) loadFile(file);
+    });
+
+    ratioButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        if (!cropper) return;
+        ratioButtons.forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        const ratio = Number(btn.dataset.ratio);
+        cropper.setAspectRatio(ratio);
+      });
+    });
+
+    rotateLeftBtn.addEventListener("click", () => cropper?.rotate(-90));
+    rotateRightBtn.addEventListener("click", () => cropper?.rotate(90));
+    resetBtn.addEventListener("click", () => cropper?.reset());
+
+    chooseNewBtn.addEventListener("click", () => {
+      if (cropper) {
+        cropper.destroy();
+        cropper = null;
+      }
+      if (currentObjectUrl) {
+        URL.revokeObjectURL(currentObjectUrl);
+        currentObjectUrl = null;
+      }
+      panel.hidden = true;
+      status.hidden = true;
+    });
+
+    downloadBtn.addEventListener("click", () => {
+      if (!cropper) return;
+      const canvas = cropper.getCroppedCanvas({
+        imageSmoothingQuality: "high",
+      });
+      const type = formatSelect.value;
+      const ext =
+        type === "image/jpeg" ? "jpg" : type === "image/webp" ? "webp" : "png";
+
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) return;
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `zipizy-cropped.${ext}`;
+          a.click();
+          URL.revokeObjectURL(url);
+        },
+        type,
+        0.92,
+      );
+    });
+  </script>
+</ToolLayout>

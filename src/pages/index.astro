@@ -1,0 +1,629 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Header from "../components/Header.astro";
+const tools = [
+  {
+    href: "/tools/word-counter",
+    name: "Word Counter",
+    description: "Count words, characters, and sentences instantly.",
+    category: "Everyday",
+    live: true,
+  },
+  {
+    href: "/tools/pdf-merge",
+    name: "PDF Merge",
+    description: "Combine multiple PDFs into a single file.",
+    category: "Everyday",
+    live: true,
+  },
+  {
+    href: "/tools/pdf-split",
+    name: "PDF Split",
+    description: "Split a PDF into separate pages or ranges.",
+    category: "Everyday",
+    live: true,
+  },
+  {
+    href: "/tools/pdf-protect",
+    name: "PDF Protect",
+    description: "Add a password to a PDF file.",
+    category: "Everyday",
+    live: true,
+  },
+  {
+    href: "/tools/qr-generator",
+    name: "QR Code Generator",
+    description: "Create QR codes with an optional logo.",
+    category: "Everyday",
+    live: true,
+  },
+  {
+    href: "/tools/case-converter",
+    name: "Case Converter",
+    description: "Convert text between upper, lower, title, and sentence case.",
+    category: "Everyday",
+    live: true,
+  },
+  {
+    href: "/tools/json-formatter",
+    name: "JSON Formatter & Diff",
+    description: "Format, validate, and diff JSON.",
+    category: "Developer",
+    live: true,
+  },
+  {
+    href: "/tools/regex-tester",
+    name: "Regex Tester",
+    description: "Test regular expressions against sample text.",
+    category: "Developer",
+    live: true,
+  },
+  {
+    href: "/tools/base64",
+    name: "Base64 Encoder/Decoder",
+    description: "Encode or decode Base64 strings.",
+    category: "Developer",
+    live: true,
+  },
+  {
+    href: "/tools/uuid-generator",
+    name: "UUID Generator",
+    description: "Generate v4 UUIDs in bulk.",
+    category: "Developer",
+    live: true,
+  },
+  {
+    href: "/tools/hash-generator",
+    name: "SHA-256 Hash Generator",
+    description: "Generate hashes from text or files.",
+    category: "Developer",
+    live: true,
+  },
+  {
+    href: "/tools/aspect-ratio",
+    name: "Aspect Ratio Calculator",
+    description: "Calculate resized dimensions for any aspect ratio.",
+    category: "Creator",
+    live: true,
+  },
+  {
+    href: "/tools/image-crop",
+    name: "Image Cropper",
+    description: "Crop images directly in your browser.",
+    category: "Creator",
+    live: true,
+  },
+  {
+    href: "/tools/youtube-thumbnail",
+    name: "YouTube Thumbnail Downloader",
+    description: "Download thumbnails from any YouTube video.",
+    category: "Creator",
+    live: true,
+  },
+  {
+    href: "/tools/vimeo-thumbnail",
+    name: "Vimeo Thumbnail Downloader",
+    description: "Download thumbnails from any Vimeo video.",
+    category: "Creator",
+    live: true,
+  },
+];
+
+tools.push(
+  {
+    href: "/jpg-to-pdf",
+    name: "JPG to PDF",
+    description: "Combine JPG images into a PDF.",
+    category: "Everyday",
+    live: true,
+  },
+  {
+    href: "/png-to-pdf",
+    name: "PNG to PDF",
+    description: "Turn PNG images into a PDF.",
+    category: "Everyday",
+    live: true,
+  },
+  {
+    href: "/heic-to-pdf",
+    name: "HEIC to PDF",
+    description: "Convert iPhone photos into a PDF.",
+    category: "Everyday",
+    live: true,
+  },
+  {
+    href: "/wifi-qr-code-generator",
+    name: "Wi-Fi QR Code",
+    description: "Share network access with a QR code.",
+    category: "Everyday",
+    live: true,
+  },
+  {
+    href: "/vcard-qr-generator",
+    name: "Contact QR Code",
+    description: "Share contact details with a vCard QR.",
+    category: "Everyday",
+    live: true,
+  },
+  {
+    href: "/whatsapp-link-qr",
+    name: "WhatsApp Link & QR",
+    description: "Create a chat link with a ready-to-send message.",
+    category: "Everyday",
+    live: true,
+  },
+);
+
+const categories = [
+  "All tools",
+  "Documents",
+  "QR codes",
+  "Text",
+  "Developer",
+  "Media",
+];
+const classify = (tool: { href: string }) =>
+  tool.href.includes("pdf")
+    ? "Documents"
+    : tool.href.includes("qr")
+      ? "QR codes"
+      : /word-counter|case-converter|base64/.test(tool.href)
+        ? "Text"
+        : /json|regex|uuid|hash/.test(tool.href)
+          ? "Developer"
+          : "Media";
+---
+
+<Layout
+  title="Zipizy — Your everyday toolkit"
+  description="Free tools for documents, text, QR codes and development. Process files on your device, without an account."
+>
+  <Header />
+  <main>
+    <div class="library-top">
+      <div>
+        <p class="eyebrow">YOUR EVERYDAY TOOLKIT</p>
+        <h1>
+          Small tasks. <span>Sorted.</span>
+        </h1>
+        <p class="intro">
+          Useful tools, one quiet workspace. Your files stay on your device.
+        </p>
+      </div>
+      <a
+        class="download"
+        href="https://github.com/denethraveesha-spec/Zipizy/releases"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Download for Windows
+      </a>
+    </div>
+    <div class="library-bar">
+      <label class="search">
+        <span aria-hidden="true">⌕</span>
+        <input
+          id="tool-search"
+          type="search"
+          placeholder="Find a tool…"
+          aria-label="Find a tool"
+          autocomplete="off"
+        />
+      </label>
+      <span class="library-count" id="tool-count" aria-live="polite">
+        {tools.length} tools
+      </span>
+    </div>
+    <div class="library">
+      <aside>
+        <p class="eyebrow">BROWSE</p>
+        <div role="group" aria-label="Tool categories">
+          {categories.map((category, index) => (
+            <button
+              type="button"
+              data-category={category}
+              aria-pressed={index === 0}
+              class:list={{ active: index === 0 }}
+            >
+              {category}
+              <span>
+                {category === "All tools"
+                  ? tools.length
+                  : tools.filter((t) => classify(t) === category).length}
+              </span>
+            </button>
+          ))}
+        </div>
+        <div class="local-note">
+          <strong>Made to stay local.</strong>
+          <p>
+            No account. No file uploads. Most tools work offline in the desktop
+            app.
+          </p>
+        </div>
+      </aside>
+      <section aria-label="Tools">
+        <div class="tool-grid">
+          {tools.map((tool, index) => (
+            <a
+              class="tool-card"
+              href={tool.href}
+              data-tool-category={classify(tool)}
+              data-search={(
+                tool.name +
+                " " +
+                tool.description +
+                " " +
+                classify(tool)
+              ).toLowerCase()}
+            >
+              <div class="card-top">
+                <span class="tool-icon" aria-hidden="true">
+                  {classify(tool) === "Developer"
+                    ? "{}"
+                    : classify(tool) === "Documents"
+                      ? "▤"
+                      : classify(tool) === "QR codes"
+                        ? "▦"
+                        : classify(tool) === "Text"
+                          ? "Aa"
+                          : "◩"}
+                </span>
+                <span class="tool-mode">
+                  {tool.href.includes("thumbnail")
+                    ? "Internet needed"
+                    : "On-device"}
+                </span>
+              </div>
+              <h2>{tool.name}</h2>
+              <p>{tool.description}</p>
+              <span class="card-category">{classify(tool)}</span>
+            </a>
+          ))}
+        </div>
+        <div id="empty-search" hidden>
+          <h2>No matching tools</h2>
+          <p>Try a shorter search or choose another category.</p>
+          <button id="reset-search">Reset filters</button>
+        </div>
+      </section>
+    </div>
+    <div class="library-footer">
+      <span>Free to use. Open source.</span>
+      <a
+        href="https://github.com/denethraveesha-spec/Zipizy"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        View source on GitHub
+      </a>
+    </div>
+  </main>
+  <script>
+    const input = document.querySelector<HTMLInputElement>("#tool-search")!;
+    const buttons =
+      document.querySelectorAll<HTMLButtonElement>("[data-category]");
+    const cards = document.querySelectorAll<HTMLAnchorElement>(
+      "[data-tool-category]",
+    );
+    let category = "All tools";
+    function filter() {
+      let count = 0;
+      for (const card of cards) {
+        card.hidden =
+          !(
+            category === "All tools" || category === card.dataset.toolCategory
+          ) ||
+          !input.value
+            .toLowerCase()
+            .trim()
+            .split(/\s+/)
+            .every((term) => card.dataset.search!.includes(term));
+        if (!card.hidden) count++;
+      }
+      document.querySelector("#tool-count")!.textContent =
+        count + " tool" + (count === 1 ? "" : "s");
+      document.querySelector<HTMLElement>("#empty-search")!.hidden =
+        count !== 0;
+      for (const button of buttons) {
+        const selected = button.dataset.category === category;
+        button.classList.toggle("active", selected);
+        button.setAttribute("aria-pressed", String(selected));
+      }
+    }
+    input.addEventListener("input", filter);
+    buttons.forEach((button) =>
+      button.addEventListener("click", () => {
+        category = button.dataset.category!;
+        filter();
+      }),
+    );
+    document.querySelector("#reset-search")!.addEventListener("click", () => {
+      category = "All tools";
+      input.value = "";
+      filter();
+      input.focus();
+    });
+  </script>
+  <style>
+    main {
+      max-width: 1240px;
+      margin: auto;
+      padding: 42px 32px;
+    }
+    .library-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 30px;
+      margin-bottom: 32px;
+    }
+    .eyebrow {
+      font-size: 11px;
+      letter-spacing: 1.6px;
+      color: var(--text-secondary);
+      font-weight: 650;
+    }
+    h1 {
+      font-size: clamp(30px, 4vw, 44px);
+      letter-spacing: -1.6px;
+      margin: 10px 0;
+    }
+    h1 span {
+      color: var(--color-primary);
+    }
+    .intro {
+      color: var(--text-secondary);
+      font-size: 16px;
+      margin: 0;
+    }
+    .download {
+      padding: 13px 17px;
+      background: var(--color-primary);
+      color: var(--color-primary-contrast);
+      text-decoration: none;
+      border-radius: 9px;
+      font-size: 14px;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+    .library-bar {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      border-block: 1px solid var(--border);
+      padding: 18px 0;
+      margin-bottom: 28px;
+    }
+    .search {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      padding: 10px 16px;
+      border-radius: 10px;
+      width: min(520px, 80%);
+    }
+    .search > span {
+      font-size: 26px;
+      color: var(--text-secondary);
+    }
+    input {
+      font: inherit;
+      color: var(--text-primary);
+      background: none;
+      border: 0;
+      outline: none;
+      width: 100%;
+    }
+    .search:focus-within {
+      outline: 2px solid var(--color-primary);
+    }
+    .library-count {
+      margin-left: auto;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+    .library {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      gap: 30px;
+    }
+    aside button {
+      font: inherit;
+      font-size: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: 0;
+      background: none;
+      color: var(--text-secondary);
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: left;
+      margin: 3px 0;
+    }
+    aside button.active {
+      background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+      color: var(--color-primary);
+      font-weight: 650;
+    }
+    aside button span {
+      font-size: 12px;
+      opacity: 0.8;
+    }
+    .local-note {
+      border-top: 1px solid var(--border);
+      margin-top: 30px;
+      padding-top: 22px;
+      font-size: 13px;
+    }
+    .local-note strong {
+      font-size: 14px;
+    }
+    .local-note p {
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+    .tool-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+    .tool-card {
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      padding: 21px;
+      color: inherit;
+      text-decoration: none;
+      transition:
+        border-color 0.15s,
+        transform 0.15s;
+      min-height: 213px;
+    }
+    .tool-card[hidden] {
+      display: none;
+    }
+    .tool-card:hover {
+      border-color: var(--color-primary);
+      transform: translateY(-2px);
+    }
+    .card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .tool-icon {
+      font-family: var(--font-mono);
+      font-size: 23px;
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: var(--bg-secondary);
+      display: grid;
+      place-items: center;
+      color: var(--color-primary);
+    }
+    .tool-mode {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+    .tool-card h2 {
+      font-size: 17px;
+      margin: 19px 0 7px;
+      letter-spacing: -0.3px;
+    }
+    .tool-card p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin: 0 0 20px;
+    }
+    .card-category {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-top: auto;
+    }
+    .library-footer {
+      margin-top: 35px;
+      border-top: 1px solid var(--border);
+      padding-top: 20px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+    #empty-search {
+      padding: 45px;
+      text-align: center;
+      color: var(--text-secondary);
+    }
+    #reset-search {
+      font: inherit;
+      padding: 10px 15px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      cursor: pointer;
+    }
+    @media (max-width: 1050px) {
+      .tool-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+    @media (max-width: 700px) {
+      main {
+        padding: 26px 18px;
+      }
+      .library-top {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 20px;
+      }
+      .library {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+      aside > p,
+      .local-note {
+        display: none;
+      }
+      aside > div[role] {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      aside button {
+        width: auto;
+        font-size: 13px;
+        padding: 9px 11px;
+        gap: 10px;
+        border: 1px solid var(--border);
+      }
+      .tool-grid {
+        gap: 12px;
+      }
+      .tool-card {
+        padding: 16px;
+      }
+      .tool-mode {
+        font-size: 10px;
+      }
+      .tool-card h2 {
+        font-size: 16px;
+      }
+      .tool-icon {
+        width: 34px;
+        height: 34px;
+      }
+      .library-footer {
+        gap: 20px;
+      }
+      .library-bar {
+        margin-bottom: 16px;
+      }
+    }
+    @media (max-width: 420px) {
+      .tool-grid {
+        grid-template-columns: 1fr;
+      }
+      .tool-card {
+        min-height: 185px;
+      }
+      .tool-card h2 {
+        margin-top: 13px;
+      }
+      .tool-mode {
+        font-size: 12px;
+      }
+    }
+  </style>
+</Layout>

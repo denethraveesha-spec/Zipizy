@@ -1,0 +1,345 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+
+const howTo = [
+  {
+    name: "Enter the original size",
+    text: "Type the original width and height (in pixels, or any unit) — or pick a common preset like 16:9 or 4:3.",
+  },
+  {
+    name: "Enter a new width, height, or scale",
+    text: "Type a new width or height and the other value fills in automatically to keep the same proportions. Or use the scale percentage to resize both at once.",
+  },
+  {
+    name: "Read the simplified ratio",
+    text: "The simplified ratio (like 16:9 or 3:2) and decimal value are shown at the top, updating as you type.",
+  },
+];
+
+const faqs = [
+  {
+    question: "Does this tool resize my actual image or video file?",
+    answer:
+      "No, it only does the math. It tells you what height matches a given width (or vice versa) so the proportions stay correct — you then apply that size in your image editor, video software, or CSS.",
+  },
+  {
+    question: "How is the simplified ratio calculated?",
+    answer:
+      "It finds the greatest common divisor (GCD) of the width and height and divides both by it — the same method used to reduce a fraction, so 1920×1080 simplifies to 16:9.",
+  },
+  {
+    question: "Can I use this for responsive web design?",
+    answer:
+      "Yes. Aspect ratio math is exactly what CSS's aspect-ratio property and the old padding-top percentage hack rely on — this tool helps you work out the right numbers for either approach.",
+  },
+  {
+    question: "What if I enter a width and height that aren't whole numbers?",
+    answer:
+      "The new-size calculation works fine with decimals. The simplified ratio display rounds to the nearest whole number first, since ratios like 16:9 are conventionally expressed as whole numbers.",
+  },
+];
+
+const presets = [
+  { label: "16:9", w: 1920, h: 1080 },
+  { label: "4:3", w: 1024, h: 768 },
+  { label: "1:1", w: 1000, h: 1000 },
+  { label: "3:2", w: 1500, h: 1000 },
+  { label: "21:9", w: 2560, h: 1080 },
+  { label: "9:16", w: 1080, h: 1920 },
+];
+---
+
+<ToolLayout
+  title="Aspect Ratio Calculator — Resize Without Distortion | Zipizy"
+  description="Calculate the correct width or height to keep an image or video's aspect ratio, or scale by percentage. Free, private, no sign-up required."
+  toolName="Aspect Ratio Calculator"
+  intro="Calculate a matching width or height to keep your original proportions — free, private, no sign-up required."
+  howTo={howTo}
+  faqs={faqs}
+>
+  <div class="ar-tool">
+    <div class="section">
+      <div class="section-header">
+        <h3>Original size</h3>
+        <span id="ar-ratio" class="ratio-display">
+          16:9 (1.7778)
+        </span>
+      </div>
+      <div class="size-row">
+        <label class="size-field">
+          Width
+          <input id="ar-w1" type="number" min="1" value="1920" />
+        </label>
+        <span class="times">×</span>
+        <label class="size-field">
+          Height
+          <input id="ar-h1" type="number" min="1" value="1080" />
+        </label>
+        <button
+          id="ar-swap"
+          type="button"
+          class="action-btn"
+          title="Swap width and height"
+        >
+          ⇅ Swap
+        </button>
+      </div>
+      <div class="presets">
+        {presets.map((p) => (
+          <button type="button" class="preset-btn" data-w={p.w} data-h={p.h}>
+            {p.label}
+          </button>
+        ))}
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Calculate new size</h3>
+      <div class="size-row">
+        <label class="size-field">
+          New width
+          <input id="ar-w2" type="number" min="1" value="800" />
+        </label>
+        <span class="times">×</span>
+        <label class="size-field">
+          New height
+          <input id="ar-h2" type="number" min="1" />
+        </label>
+      </div>
+      <label class="scale-field">
+        Or scale by percentage
+        <input id="ar-scale" type="number" min="1" placeholder="e.g. 50" />
+        <span>%</span>
+      </label>
+    </div>
+  </div>
+
+  <style>
+    .ar-tool {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .section {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .section h3 {
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    .ratio-display {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--color-primary);
+    }
+
+    .size-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .size-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    .size-field input {
+      width: 8rem;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.5rem 0.6rem;
+      font-family: var(--font-mono);
+      font-size: 1rem;
+    }
+
+    .size-field input:focus {
+      outline: 2px solid var(--color-primary);
+      outline-offset: -1px;
+    }
+
+    .times {
+      color: var(--text-secondary);
+      padding-bottom: 0.6rem;
+    }
+
+    .action-btn {
+      background: var(--bg-primary);
+      color: var(--color-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.5rem 0.9rem;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    .action-btn:hover {
+      border-color: var(--color-primary);
+    }
+
+    .presets {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .preset-btn {
+      background: var(--bg-primary);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0.35rem 0.9rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .preset-btn:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+
+    .scale-field {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .scale-field input {
+      width: 6rem;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.5rem 0.6rem;
+      font-family: var(--font-mono);
+      font-size: 1rem;
+    }
+  </style>
+
+  <script>
+    const w1Input = document.getElementById("ar-w1") as HTMLInputElement;
+    const h1Input = document.getElementById("ar-h1") as HTMLInputElement;
+    const w2Input = document.getElementById("ar-w2") as HTMLInputElement;
+    const h2Input = document.getElementById("ar-h2") as HTMLInputElement;
+    const scaleInput = document.getElementById("ar-scale") as HTMLInputElement;
+    const ratioDisplay = document.getElementById("ar-ratio")!;
+    const swapBtn = document.getElementById("ar-swap")!;
+    const presetButtons =
+      document.querySelectorAll<HTMLButtonElement>(".preset-btn");
+
+    function gcd(a: number, b: number): number {
+      a = Math.abs(Math.round(a));
+      b = Math.abs(Math.round(b));
+      while (b) {
+        [a, b] = [b, a % b];
+      }
+      return a || 1;
+    }
+
+    function updateRatioDisplay() {
+      const w1 = Number(w1Input.value);
+      const h1 = Number(h1Input.value);
+      if (!Number.isFinite(w1) || !Number.isFinite(h1) || w1 <= 0 || h1 <= 0) {
+        ratioDisplay.textContent = "—";
+        return;
+      }
+      const d = gcd(w1, h1);
+      const simplifiedW = Math.round(w1) / d;
+      const simplifiedH = Math.round(h1) / d;
+      const decimal = (w1 / h1).toFixed(4);
+      ratioDisplay.textContent = `${simplifiedW}:${simplifiedH} (${decimal})`;
+    }
+
+    function recalcFromWidth() {
+      const w1 = Number(w1Input.value);
+      const h1 = Number(h1Input.value);
+      const w2 = Number(w2Input.value);
+      if (![w1, h1, w2].every((v) => Number.isFinite(v) && v > 0)) {
+        h2Input.value = "";
+        return;
+      }
+      h2Input.value = String(Math.round((w2 * h1) / w1));
+      scaleInput.value = ((w2 / w1) * 100).toFixed(2).replace(/\.00$/, "");
+    }
+
+    function recalcFromHeight() {
+      const w1 = Number(w1Input.value);
+      const h1 = Number(h1Input.value);
+      const h2 = Number(h2Input.value);
+      if (![w1, h1, h2].every((v) => Number.isFinite(v) && v > 0)) {
+        w2Input.value = "";
+        return;
+      }
+      w2Input.value = String(Math.round((h2 * w1) / h1));
+      scaleInput.value = ((h2 / h1) * 100).toFixed(2).replace(/\.00$/, "");
+    }
+
+    function recalcFromScale() {
+      const w1 = Number(w1Input.value);
+      const h1 = Number(h1Input.value);
+      const pct = Number(scaleInput.value);
+      if (![w1, h1, pct].every((v) => Number.isFinite(v) && v > 0)) {
+        w2Input.value = "";
+        return;
+      }
+      w2Input.value = String(Math.round((w1 * pct) / 100));
+      h2Input.value = String(Math.round((h1 * pct) / 100));
+    }
+
+    function recalcOriginalChanged() {
+      updateRatioDisplay();
+      if (w2Input.value) {
+        recalcFromWidth();
+      } else if (h2Input.value) {
+        recalcFromHeight();
+      }
+    }
+
+    w1Input.addEventListener("input", recalcOriginalChanged);
+    h1Input.addEventListener("input", recalcOriginalChanged);
+    w2Input.addEventListener("input", recalcFromWidth);
+    h2Input.addEventListener("input", recalcFromHeight);
+    scaleInput.addEventListener("input", recalcFromScale);
+
+    swapBtn.addEventListener("click", () => {
+      const temp = w1Input.value;
+      w1Input.value = h1Input.value;
+      h1Input.value = temp;
+      recalcOriginalChanged();
+    });
+
+    presetButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        w1Input.value = btn.dataset.w ?? "";
+        h1Input.value = btn.dataset.h ?? "";
+        recalcOriginalChanged();
+      });
+    });
+
+    updateRatioDisplay();
+    recalcFromWidth();
+  </script>
+</ToolLayout>

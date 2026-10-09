@@ -1,0 +1,64 @@
+---
+import ToolLayout from "../layouts/ToolLayout.astro";
+import ImageToPdfWidget from "../components/ImageToPdfWidget.astro";
+
+const howTo = [
+  {
+    name: "Add your PNG files",
+    text: "Click to choose one or more PNG images — screenshots, graphics, or exported designs — or drag and drop them onto the drop zone.",
+  },
+  {
+    name: "Put them in order",
+    text: "If you're combining several images, use the up and down arrows to set the order they'll appear in the PDF.",
+  },
+  {
+    name: "Convert and download",
+    text: "Click Convert to PDF & Download to get a single PDF file with one page per image.",
+  },
+];
+
+const faqs = [
+  {
+    question: "Are my images uploaded anywhere?",
+    answer:
+      "No. The PNG-to-PDF conversion happens entirely in your browser using a client-side library, and your images never leave your device.",
+  },
+  {
+    question: "What happens to transparent areas in my PNG?",
+    answer:
+      "PDF pages don't have transparency of their own, so transparent areas in your PNG are placed on top of the page's plain white background, the same way they'd appear if you opened the PNG on a white canvas in an image editor.",
+  },
+  {
+    question: "Is this good for converting screenshots to PDF?",
+    answer:
+      "Yes — this is one of the most common uses. Combine several screenshots into one PDF for sharing a written walkthrough, a bug report, or documentation, in the order you specify.",
+  },
+  {
+    question: "Does PNG's lossless compression carry over to the PDF?",
+    answer:
+      "Your PNG's pixel data is embedded into the PDF without re-encoding it as JPEG, so there's no additional compression artifacting introduced by the conversion — sharp text and graphics in your PNG stay sharp.",
+  },
+];
+---
+
+<ToolLayout
+  title="PNG to PDF Converter — Free, No Sign-Up | Zipizy"
+  description="Convert PNG images or screenshots to PDF, and combine multiple images into one PDF file. Free, private, runs entirely in your browser."
+  toolName="PNG to PDF"
+  intro="Convert PNG images and screenshots to PDF, and combine several into one file — free, private, no sign-up required."
+  howTo={howTo}
+  faqs={faqs}
+  relatedLinks={[
+    { href: "/jpg-to-pdf", label: "JPG to PDF Converter" },
+    { href: "/heic-to-pdf", label: "HEIC to PDF Converter" },
+    { href: "/tools/pdf-merge", label: "PDF Merge" },
+    { href: "/tools/image-crop", label: "Image Cropper" },
+  ]}
+>
+  <ImageToPdfWidget
+    accept="image/png"
+    format="png"
+    fileLabel="PNG"
+    outputName="zipizy-png-to-pdf"
+  />
+</ToolLayout>

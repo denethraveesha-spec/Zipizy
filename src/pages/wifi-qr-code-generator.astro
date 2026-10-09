@@ -1,0 +1,195 @@
+---
+import ToolLayout from "../layouts/ToolLayout.astro";
+import QrCodeBuilder from "../components/QrCodeBuilder.astro";
+
+const howTo = [
+  {
+    name: "Enter your network details",
+    text: "Type your Wi-Fi network name (SSID) and password, and choose the security type your router uses.",
+  },
+  {
+    name: "Check the preview",
+    text: "The QR code updates automatically as you type. Customize the size, colors, or add a logo if you like.",
+  },
+  {
+    name: "Print or share it",
+    text: "Download the QR code and put it somewhere guests can scan it — a phone camera will offer to join the network automatically, no typing required.",
+  },
+];
+
+const faqs = [
+  {
+    question: "Is my Wi-Fi password sent anywhere?",
+    answer:
+      "No. The QR code is generated entirely in your browser — your network name and password are encoded directly into the image on your device and never transmitted to Zipizy or anyone else.",
+  },
+  {
+    question: "How does scanning the code connect to Wi-Fi automatically?",
+    answer:
+      "Modern phone camera apps recognize a specific text format inside the QR code that describes a Wi-Fi network and its password. When they detect it, they offer a 'Join Network' button instead of just showing a link, so the person scanning never has to type the password.",
+  },
+  {
+    question: "Which security type should I choose?",
+    answer:
+      "Choose WPA/WPA2 for almost any router made in the last 15+ years — it's the most common. Choose WEP only for very old hardware that doesn't support anything newer. Choose None only for an open network with no password.",
+  },
+  {
+    question: "Does this work with WPA3 networks?",
+    answer:
+      "Most phones treat a WPA/WPA2 QR code as compatible with WPA3 networks too, since WPA3 routers typically still accept the same connection format. If a guest's phone has trouble, they can always join manually with the password shown to you.",
+  },
+];
+---
+
+<ToolLayout
+  title="Wi-Fi QR Code Generator — Free, No Sign-Up | Zipizy"
+  description="Generate a QR code that lets guests join your Wi-Fi network by scanning it, no typing required. Free, private, runs entirely in your browser."
+  toolName="Wi-Fi QR Code Generator"
+  intro="Create a QR code that connects guests to your Wi-Fi automatically — free, private, no sign-up required."
+  howTo={howTo}
+  faqs={faqs}
+  relatedLinks={[
+    { href: "/vcard-qr-generator", label: "vCard QR Code Generator" },
+    { href: "/whatsapp-link-qr", label: "WhatsApp Link QR Code" },
+    { href: "/tools/qr-generator", label: "QR Code Generator" },
+  ]}
+>
+  <div class="wifi-form">
+    <div class="field">
+      <label for="wifi-ssid">Network name (SSID)</label>
+      <input
+        id="wifi-ssid"
+        type="text"
+        placeholder="MyHomeWiFi"
+        autocomplete="off"
+      />
+    </div>
+
+    <div class="control-row">
+      <div class="field">
+        <label for="wifi-security">Security</label>
+        <select id="wifi-security">
+          <option value="WPA" selected>
+            WPA/WPA2
+          </option>
+          <option value="WEP">WEP</option>
+          <option value="nopass">None (open network)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="wifi-password">Password</label>
+        <input
+          id="wifi-password"
+          type="text"
+          placeholder="Wi-Fi password"
+          autocomplete="off"
+        />
+      </div>
+    </div>
+
+    <label class="checkbox-label">
+      <input type="checkbox" id="wifi-hidden" /> Hidden network
+    </label>
+  </div>
+
+  <QrCodeBuilder outputName="zipizy-wifi-qr" />
+</ToolLayout>
+
+<style>
+  .wifi-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    flex: 1;
+  }
+
+  .field label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+
+  .field input,
+  .field select {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.6rem 0.75rem;
+    font-size: 0.95rem;
+  }
+
+  .field input:focus,
+  .field select:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -1px;
+  }
+
+  .control-row {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+  }
+</style>
+
+<script>
+  const ssidInput = document.getElementById("wifi-ssid") as HTMLInputElement;
+  const securitySelect = document.getElementById(
+    "wifi-security",
+  ) as HTMLSelectElement;
+  const passwordInput = document.getElementById(
+    "wifi-password",
+  ) as HTMLInputElement;
+  const hiddenCheckbox = document.getElementById(
+    "wifi-hidden",
+  ) as HTMLInputElement;
+
+  function escapeWifi(value: string): string {
+    return value.replace(/([\\;,:"])/g, "\\$1");
+  }
+
+  function buildPayload(): string {
+    const ssid = ssidInput.value;
+    if (!ssid) return "";
+
+    const security = securitySelect.value;
+    const parts = [`WIFI:T:${security}`, `S:${escapeWifi(ssid)}`];
+    if (security !== "nopass" && passwordInput.value) {
+      parts.push(`P:${escapeWifi(passwordInput.value)}`);
+    }
+    parts.push(`H:${hiddenCheckbox.checked ? "true" : "false"}`);
+    return parts.join(";") + ";;";
+  }
+
+  function update() {
+    document.dispatchEvent(
+      new CustomEvent("zipizy:qr-payload", {
+        detail: { text: buildPayload() },
+      }),
+    );
+  }
+
+  [ssidInput, securitySelect, passwordInput, hiddenCheckbox].forEach((el) => {
+    el.addEventListener("input", update);
+    el.addEventListener("change", update);
+  });
+
+  update();
+</script>

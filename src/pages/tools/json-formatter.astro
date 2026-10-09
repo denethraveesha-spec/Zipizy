@@ -1,0 +1,515 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+
+const howTo = [
+  {
+    name: "Paste your JSON",
+    text: "Paste or type JSON into the input box in the Format tab.",
+  },
+  {
+    name: "Format or minify",
+    text: "Click Format to pretty-print with indentation, or Minify to collapse it to a single line. Invalid JSON shows an error with the problem location.",
+  },
+  {
+    name: "Compare two versions",
+    text: "Switch to the Compare tab, paste the original JSON on the left and the changed version on the right, then click Compare to see added and removed lines highlighted.",
+  },
+];
+
+const faqs = [
+  {
+    question: "Is my JSON uploaded to a server?",
+    answer:
+      "No. Formatting, validation, and diffing all run locally in your browser's JavaScript engine. Your data never leaves your device, which matters if you're pasting real API responses or config with sensitive fields.",
+  },
+  {
+    question: "What does the error message mean when my JSON is invalid?",
+    answer:
+      "It shows the exact error from the browser's JSON parser, such as an unexpected token or trailing comma, so you can find and fix the problem spot quickly.",
+  },
+  {
+    question: "How does the Compare tab decide what counts as a change?",
+    answer:
+      "Both inputs are parsed and re-formatted with the same indentation, then compared line by line. This means differences in spacing or key order in your original text won't show up as false changes — only actual content differences will.",
+  },
+  {
+    question: "Is there a size limit for the JSON I can format?",
+    answer:
+      "Comparison is limited to keep the page responsive: the line counts of the two formatted documents must multiply to no more than one million. Large files may still be slow to parse; compare smaller sections when needed.",
+  },
+];
+---
+
+<ToolLayout
+  title="JSON Formatter & Diff Viewer — Free Online Tool | Zipizy"
+  description="Format, validate, minify, and diff JSON online. Free, private, and runs entirely in your browser — no sign-up, nothing uploaded."
+  toolName="JSON Formatter & Diff"
+  intro="Format, validate, minify, and compare JSON — free, private, no sign-up required."
+  howTo={howTo}
+  faqs={faqs}
+>
+  <div class="json-tool">
+    <div class="tabs">
+      <button type="button" class="tab-btn active" data-tab="format">
+        Format
+      </button>
+      <button type="button" class="tab-btn" data-tab="compare">
+        Compare
+      </button>
+    </div>
+
+    <div class="panel" data-panel="format">
+      <textarea
+        id="jf-input"
+        placeholder={'Paste JSON here, e.g. {"name": "Zipizy", "free": true}'}
+        rows="10"
+        aria-label="JSON to format"
+        spellcheck="false"
+      ></textarea>
+
+      <div class="toolbar">
+        <label class="indent-label">
+          Indent
+          <select id="jf-indent">
+            <option value="2">2 spaces</option>
+            <option value="4">4 spaces</option>
+            <option value="tab">Tab</option>
+          </select>
+        </label>
+        <button id="jf-format" type="button" class="action-btn primary">
+          Format
+        </button>
+        <button id="jf-minify" type="button" class="action-btn">
+          Minify
+        </button>
+        <button id="jf-copy" type="button" class="action-btn">
+          Copy
+        </button>
+        <button id="jf-clear" type="button" class="action-btn ghost">
+          Clear
+        </button>
+        <span id="jf-copied" class="copied-msg" hidden>
+          Copied!
+        </span>
+      </div>
+
+      <p id="jf-status" class="status" hidden></p>
+    </div>
+
+    <div class="panel" data-panel="compare" hidden>
+      <div class="compare-grid">
+        <div class="compare-col">
+          <label for="jf-left">Original</label>
+          <textarea
+            id="jf-left"
+            rows="10"
+            spellcheck="false"
+            aria-label="Original JSON"
+          ></textarea>
+        </div>
+        <div class="compare-col">
+          <label for="jf-right">Changed</label>
+          <textarea
+            id="jf-right"
+            rows="10"
+            spellcheck="false"
+            aria-label="Changed JSON"
+          ></textarea>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <button id="jf-compare" type="button" class="action-btn primary">
+          Compare
+        </button>
+      </div>
+
+      <p id="jf-compare-status" class="status" hidden></p>
+
+      <pre id="jf-diff" class="diff-output" hidden></pre>
+    </div>
+  </div>
+
+  <style>
+    .json-tool {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-weight: 600;
+      padding: 0.5rem 0.25rem;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+    }
+
+    .tab-btn.active {
+      color: var(--color-primary);
+      border-bottom-color: var(--color-primary);
+    }
+
+    .panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .panel[hidden] {
+      display: none;
+    }
+
+    textarea {
+      width: 100%;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 0.75rem;
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      resize: vertical;
+    }
+
+    textarea:focus {
+      outline: 2px solid var(--color-primary);
+      outline-offset: -1px;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .indent-label {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-right: 0.25rem;
+    }
+
+    .indent-label select {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.35rem 0.5rem;
+    }
+
+    .action-btn {
+      background: var(--bg-primary);
+      color: var(--color-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.55rem 1rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    .action-btn:hover {
+      border-color: var(--color-primary);
+    }
+
+    .action-btn.primary {
+      background: var(--color-accent);
+      color: var(--color-accent-contrast);
+      border: none;
+    }
+
+    .action-btn.primary:hover {
+      opacity: 0.9;
+    }
+
+    .action-btn.ghost {
+      color: var(--text-secondary);
+    }
+
+    .copied-msg {
+      color: var(--color-success);
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .status {
+      margin: 0;
+      font-size: 0.85rem;
+      font-family: var(--font-mono);
+      padding: 0.6rem 0.75rem;
+      border-radius: var(--radius-sm);
+    }
+
+    .status.ok {
+      color: var(--color-success);
+      background: color-mix(in srgb, var(--color-success) 12%, transparent);
+    }
+
+    .status.error {
+      color: var(--color-accent);
+      background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+    }
+
+    .compare-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .compare-col {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .compare-col label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    @media (max-width: 560px) {
+      .compare-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .diff-output {
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 0.75rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      overflow-x: auto;
+      margin: 0;
+      white-space: pre;
+    }
+
+    :global(.diff-line) {
+      display: block;
+      padding: 0 0.25rem;
+    }
+
+    :global(.diff-add) {
+      background: color-mix(in srgb, var(--color-success) 16%, transparent);
+      color: var(--text-primary);
+    }
+
+    :global(.diff-remove) {
+      background: color-mix(in srgb, var(--color-accent) 16%, transparent);
+      color: var(--text-primary);
+    }
+  </style>
+
+  <script>
+    import { canonicalJson } from "../../lib/jsonCompare";
+    const tabButtons = document.querySelectorAll<HTMLButtonElement>(".tab-btn");
+    const panels = document.querySelectorAll<HTMLElement>(".panel");
+
+    tabButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        tabButtons.forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        const target = btn.dataset.tab;
+        panels.forEach((p) => {
+          p.hidden = p.dataset.panel !== target;
+        });
+      });
+    });
+
+    const input = document.getElementById("jf-input") as HTMLTextAreaElement;
+    const indentSelect = document.getElementById(
+      "jf-indent",
+    ) as HTMLSelectElement;
+    const formatBtn = document.getElementById("jf-format")!;
+    const minifyBtn = document.getElementById("jf-minify")!;
+    const copyBtn = document.getElementById("jf-copy")!;
+    const clearBtn = document.getElementById("jf-clear")!;
+    const copiedMsg = document.getElementById("jf-copied")!;
+    const status = document.getElementById("jf-status") as HTMLParagraphElement;
+
+    function getIndent(): string | number {
+      const v = indentSelect.value;
+      return v === "tab" ? "\t" : Number(v);
+    }
+
+    function showStatus(message: string, ok: boolean) {
+      status.textContent = message;
+      status.hidden = false;
+      status.classList.toggle("ok", ok);
+      status.classList.toggle("error", !ok);
+    }
+
+    formatBtn.addEventListener("click", () => {
+      try {
+        const parsed = JSON.parse(input.value);
+        input.value = JSON.stringify(parsed, null, getIndent());
+        showStatus("Valid JSON — formatted.", true);
+      } catch (e) {
+        showStatus(`Invalid JSON: ${(e as Error).message}`, false);
+      }
+    });
+
+    minifyBtn.addEventListener("click", () => {
+      try {
+        const parsed = JSON.parse(input.value);
+        input.value = JSON.stringify(parsed);
+        showStatus("Valid JSON — minified.", true);
+      } catch (e) {
+        showStatus(`Invalid JSON: ${(e as Error).message}`, false);
+      }
+    });
+
+    clearBtn.addEventListener("click", () => {
+      input.value = "";
+      status.hidden = true;
+      input.focus();
+    });
+
+    copyBtn.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(input.value);
+        copiedMsg.hidden = false;
+        setTimeout(() => {
+          copiedMsg.hidden = true;
+        }, 1500);
+      } catch (e) {
+        input.select();
+        document.execCommand("copy");
+      }
+    });
+
+    const leftInput = document.getElementById("jf-left") as HTMLTextAreaElement;
+    const rightInput = document.getElementById(
+      "jf-right",
+    ) as HTMLTextAreaElement;
+    const compareBtn = document.getElementById("jf-compare")!;
+    const compareStatus = document.getElementById(
+      "jf-compare-status",
+    ) as HTMLParagraphElement;
+    const diffOutput = document.getElementById("jf-diff") as HTMLPreElement;
+
+    function diffLines(a: string[], b: string[]) {
+      const n = a.length;
+      const m = b.length;
+      const dp: number[][] = Array.from({ length: n + 1 }, () =>
+        new Array(m + 1).fill(0),
+      );
+      for (let i = n - 1; i >= 0; i--) {
+        for (let j = m - 1; j >= 0; j--) {
+          dp[i][j] =
+            a[i] === b[j]
+              ? dp[i + 1][j + 1] + 1
+              : Math.max(dp[i + 1][j], dp[i][j + 1]);
+        }
+      }
+      const result: { type: "equal" | "add" | "remove"; text: string }[] = [];
+      let i = 0;
+      let j = 0;
+      while (i < n && j < m) {
+        if (a[i] === b[j]) {
+          result.push({ type: "equal", text: a[i] });
+          i++;
+          j++;
+        } else if (dp[i + 1][j] >= dp[i][j + 1]) {
+          result.push({ type: "remove", text: a[i] });
+          i++;
+        } else {
+          result.push({ type: "add", text: b[j] });
+          j++;
+        }
+      }
+      while (i < n) {
+        result.push({ type: "remove", text: a[i] });
+        i++;
+      }
+      while (j < m) {
+        result.push({ type: "add", text: b[j] });
+        j++;
+      }
+      return result;
+    }
+
+    compareBtn.addEventListener("click", () => {
+      let leftParsed: unknown;
+      let rightParsed: unknown;
+      try {
+        leftParsed = JSON.parse(leftInput.value);
+      } catch (e) {
+        compareStatus.textContent = `Original JSON is invalid: ${(e as Error).message}`;
+        compareStatus.hidden = false;
+        compareStatus.classList.remove("ok");
+        compareStatus.classList.add("error");
+        diffOutput.hidden = true;
+        return;
+      }
+      try {
+        rightParsed = JSON.parse(rightInput.value);
+      } catch (e) {
+        compareStatus.textContent = `Changed JSON is invalid: ${(e as Error).message}`;
+        compareStatus.hidden = false;
+        compareStatus.classList.remove("ok");
+        compareStatus.classList.add("error");
+        diffOutput.hidden = true;
+        return;
+      }
+
+      const leftLines = canonicalJson(leftParsed).split("\n");
+      const rightLines = canonicalJson(rightParsed).split("\n");
+      if (leftLines.length * rightLines.length > 1_000_000) {
+        compareStatus.textContent =
+          "These documents are too large to compare here. Compare smaller sections (up to 1,000 lines each).";
+        compareStatus.hidden = false;
+        compareStatus.classList.remove("ok");
+        compareStatus.classList.add("error");
+        diffOutput.hidden = true;
+        return;
+      }
+      const diff = diffLines(leftLines, rightLines);
+      const added = diff.filter((d) => d.type === "add").length;
+      const removed = diff.filter((d) => d.type === "remove").length;
+
+      diffOutput.innerHTML = "";
+      diff.forEach((d) => {
+        const line = document.createElement("span");
+        line.className =
+          "diff-line" +
+          (d.type === "add"
+            ? " diff-add"
+            : d.type === "remove"
+              ? " diff-remove"
+              : "");
+        const prefix =
+          d.type === "add" ? "+ " : d.type === "remove" ? "- " : "  ";
+        line.textContent = prefix + d.text;
+        diffOutput.appendChild(line);
+      });
+      diffOutput.hidden = false;
+
+      if (added === 0 && removed === 0) {
+        compareStatus.textContent =
+          "No differences — the two JSON values are equivalent.";
+        compareStatus.classList.add("ok");
+        compareStatus.classList.remove("error");
+      } else {
+        compareStatus.textContent = `${added} line(s) added, ${removed} line(s) removed.`;
+        compareStatus.classList.remove("ok", "error");
+      }
+      compareStatus.hidden = false;
+    });
+  </script>
+</ToolLayout>

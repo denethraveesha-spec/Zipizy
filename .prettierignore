@@ -1,0 +1,7 @@
+node_modules
+dist
+release
+.astro
+.claude
+THIRD_PARTY_NOTICES.md
+package-lock.json

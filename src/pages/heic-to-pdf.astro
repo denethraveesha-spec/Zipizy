@@ -1,0 +1,64 @@
+---
+import ToolLayout from "../layouts/ToolLayout.astro";
+import ImageToPdfWidget from "../components/ImageToPdfWidget.astro";
+
+const howTo = [
+  {
+    name: "Add your HEIC photos",
+    text: "Click to choose one or more .heic or .heif photos from your iPhone, or drag and drop them onto the drop zone.",
+  },
+  {
+    name: "Wait for the conversion",
+    text: "Each photo is decoded from Apple's HEIC format to a standard image entirely in your browser — this can take a few seconds per photo.",
+  },
+  {
+    name: "Download your PDF",
+    text: "Once ready, click Convert to PDF & Download to get a single PDF with one page per photo.",
+  },
+];
+
+const faqs = [
+  {
+    question: "Why can't I just open a HEIC file like a normal photo?",
+    answer:
+      "HEIC (High Efficiency Image Format) is the format iPhones save photos in by default since iOS 11. It compresses well, but almost no web browser can display it directly — Zipizy works around that by decoding it in your browser before building the PDF, rather than requiring a browser that supports it.",
+  },
+  {
+    question: "Are my photos uploaded anywhere?",
+    answer:
+      "No. Both the HEIC decoding and the PDF conversion happen entirely in your browser using client-side libraries. Your photos are never sent to a server.",
+  },
+  {
+    question: "Why is this slower than the JPG or PNG converter?",
+    answer:
+      "Decoding HEIC requires more work than reading a JPG or PNG, since your browser has to run a full HEIC decoder rather than use built-in image support. Large photos or a large batch may take a few extra seconds per file.",
+  },
+  {
+    question:
+      "Does the converted PDF keep my photo's original quality and metadata?",
+    answer:
+      "The visual image quality is preserved well during decoding, but metadata such as location, camera info, and Live Photo data is not carried over to the PDF — only the visible image itself is included.",
+  },
+];
+---
+
+<ToolLayout
+  title="HEIC to PDF Converter — iPhone Photos to PDF | Zipizy"
+  description="Convert HEIC or HEIF iPhone photos to PDF, and combine multiple photos into one PDF file. Free, private, runs entirely in your browser."
+  toolName="HEIC to PDF"
+  intro="Convert HEIC or HEIF iPhone photos to PDF, and combine several into one file — free, private, no sign-up required."
+  howTo={howTo}
+  faqs={faqs}
+  relatedLinks={[
+    { href: "/jpg-to-pdf", label: "JPG to PDF Converter" },
+    { href: "/png-to-pdf", label: "PNG to PDF Converter" },
+    { href: "/tools/pdf-merge", label: "PDF Merge" },
+  ]}
+>
+  <ImageToPdfWidget
+    accept=".heic,.heif,image/heic,image/heif"
+    format="heic"
+    fileLabel="HEIC"
+    outputName="zipizy-heic-to-pdf"
+  />
+</ToolLayout>

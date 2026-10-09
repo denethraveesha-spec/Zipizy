@@ -1,0 +1,71 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Header from "../components/Header.astro";
+---
+
+<Layout
+  title="About Zipizy"
+  description="Free everyday tools by Deneth Raveesha."
+>
+  <Header />
+  <main>
+    <p class="eyebrow">ABOUT ZIPIZY</p>
+    <h1>Get the small things done.</h1>
+    <p>
+      Zipizy brings document, text, QR and developer tools into one workspace.
+      Open a tool, finish the task and get on with your day.
+    </p>
+    <p>
+      File and text processing happens on your device. No account or
+      subscription is required. The Windows desktop app includes the tools for
+      offline use, except video thumbnail tools which need an internet
+      connection.
+    </p>
+    <h2>Built by Deneth Raveesha</h2>
+    <p>
+      I build software for everyday workflows. Zipizy is free and open source
+      under the MIT license.
+    </p>
+    <p>
+      <a
+        href="https://github.com/denethraveesha-spec/Zipizy"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Source code
+      </a>{" "}
+      ·{" "}
+      <a
+        href="https://github.com/denethraveesha-spec/Zipizy/issues"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Report a problem
+      </a>{" "}
+      · <a href="mailto:denethraveesha@gmail.com">Get in touch</a>
+    </p>
+  </main>
+  <style>
+    main {
+      max-width: 760px;
+      margin: auto;
+      padding: 45px 24px;
+    }
+    h1 {
+      font-size: 36px;
+      letter-spacing: -1px;
+    }
+    h2 {
+      margin-top: 36px;
+      font-size: 22px;
+    }
+    p {
+      line-height: 1.8;
+      color: var(--text-secondary);
+    }
+    .eyebrow {
+      font-size: 12px;
+      letter-spacing: 2px;
+    }
+  </style>
+</Layout>

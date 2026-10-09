@@ -1,0 +1,8 @@
+{
+  "name": "zipizy-desktop",
+  "version": "0.1.0",
+  "description": "Private everyday tools for your desktop",
+  "author": "Deneth Raveesha",
+  "license": "MIT",
+  "main": "main.cjs"
+}

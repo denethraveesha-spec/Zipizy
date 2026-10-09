@@ -1,0 +1,35 @@
+appId: com.denethraveesha.zipizy
+productName: Zipizy
+directories:
+  app: desktop
+  output: release
+files:
+  - main.cjs
+  - paths.cjs
+  - package.json
+  - icon.png
+  - "!**/node_modules/**"
+extraResources:
+  - from: dist
+    to: site
+  - from: LICENSE
+    to: LICENSE.txt
+  - from: THIRD_PARTY_NOTICES.md
+    to: THIRD_PARTY_NOTICES.md
+asar: true
+npmRebuild: false
+publish: null
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  signAndEditExecutable: true
+  icon: desktop/icon.ico
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  runAfterFinish: false
+artifactName: Zipizy-${version}-Windows-${arch}-Setup.${ext}

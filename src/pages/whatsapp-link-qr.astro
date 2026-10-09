@@ -1,0 +1,150 @@
+---
+import ToolLayout from "../layouts/ToolLayout.astro";
+import QrCodeBuilder from "../components/QrCodeBuilder.astro";
+
+const howTo = [
+  {
+    name: "Enter a phone number",
+    text: "Type the WhatsApp number including its country code, digits only or with normal formatting — either works.",
+  },
+  {
+    name: "Add a starting message (optional)",
+    text: "If you want the chat to open with a pre-filled message, type it in. Leave it blank for a plain 'start chatting' link.",
+  },
+  {
+    name: "Share the QR code",
+    text: "Scanning the code opens WhatsApp with a chat to that number already started — handy on menus, posters, or business cards.",
+  },
+];
+
+const faqs = [
+  {
+    question: "Is the phone number or message sent anywhere?",
+    answer:
+      "No. The QR code is built entirely in your browser from a standard wa.me link — nothing is sent to Zipizy or any server, and no message is actually sent until the person scanning taps send in their own WhatsApp app.",
+  },
+  {
+    question: "Does the recipient need my number saved in their contacts?",
+    answer:
+      "No — that's the main benefit of a wa.me link. It opens a chat with that number directly, even if it isn't saved as a contact.",
+  },
+  {
+    question: "What format should I use for the phone number?",
+    answer:
+      "Include the country code (like 1 for the US or 44 for the UK) without a leading + or 00. You can type it with spaces or dashes for readability — Zipizy strips those automatically before building the link.",
+  },
+  {
+    question: "Can I customize the pre-filled message?",
+    answer:
+      "Yes. Whatever you type in the message field appears in the recipient's message box when they open the chat, ready to send or edit — useful for things like 'I'd like to order the...' on a restaurant menu.",
+  },
+];
+---
+
+<ToolLayout
+  title="WhatsApp QR Code Generator — Free, No Sign-Up | Zipizy"
+  description="Generate a QR code that opens a WhatsApp chat with your number, with an optional pre-filled message. Free, private, runs entirely in your browser."
+  toolName="WhatsApp Link QR Code"
+  intro="Create a QR code that opens a WhatsApp chat with your number in one scan — free, private, no sign-up required."
+  howTo={howTo}
+  faqs={faqs}
+  relatedLinks={[
+    { href: "/wifi-qr-code-generator", label: "Wi-Fi QR Code Generator" },
+    { href: "/vcard-qr-generator", label: "vCard QR Code Generator" },
+    { href: "/tools/qr-generator", label: "QR Code Generator" },
+  ]}
+>
+  <div class="wa-form">
+    <div class="field">
+      <label for="wa-phone">Phone number (with country code)</label>
+      <input
+        id="wa-phone"
+        type="text"
+        placeholder="1 555 123 4567"
+        autocomplete="off"
+      />
+    </div>
+    <div class="field">
+      <label for="wa-message">Pre-filled message (optional)</label>
+      <textarea
+        id="wa-message"
+        rows="3"
+        placeholder="Hi! I'd like to ask about..."
+      ></textarea>
+    </div>
+  </div>
+
+  <QrCodeBuilder outputName="zipizy-whatsapp-qr" />
+</ToolLayout>
+
+<style>
+  .wa-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .field label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+
+  .field input,
+  .field textarea {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.6rem 0.75rem;
+    font-size: 0.95rem;
+    font-family: inherit;
+    resize: vertical;
+  }
+
+  .field input:focus,
+  .field textarea:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -1px;
+  }
+</style>
+
+<script>
+  const phoneInput = document.getElementById("wa-phone") as HTMLInputElement;
+  const messageInput = document.getElementById(
+    "wa-message",
+  ) as HTMLTextAreaElement;
+
+  function buildPayload(): string {
+    const digits = phoneInput.value.replace(/[^\d]/g, "");
+    if (!digits) return "";
+
+    const message = messageInput.value.trim();
+    return message
+      ? `https://wa.me/${digits}?text=${encodeURIComponent(message)}`
+      : `https://wa.me/${digits}`;
+  }
+
+  function update() {
+    document.dispatchEvent(
+      new CustomEvent("zipizy:qr-payload", {
+        detail: { text: buildPayload() },
+      }),
+    );
+  }
+
+  [phoneInput, messageInput].forEach((el) => {
+    el.addEventListener("input", update);
+  });
+
+  update();
+</script>

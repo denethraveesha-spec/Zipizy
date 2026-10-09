@@ -1,0 +1,363 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+
+const howTo = [
+  {
+    name: "Paste a video link",
+    text: "Paste any public Vimeo video link (vimeo.com/... or player.vimeo.com/video/...), or just the numeric video ID.",
+  },
+  {
+    name: "Wait for the sizes to load",
+    text: "Zipizy asks Vimeo's own public oEmbed service for the thumbnail at several sizes, then shows every one that came back distinct.",
+  },
+  {
+    name: "Download",
+    text: "Click Download under any size to save it as a JPG to your device.",
+  },
+];
+
+const faqs = [
+  {
+    question: "Does this upload the video or my link to a server?",
+    answer:
+      "No Zipizy server is involved. Your browser calls Vimeo's own public oEmbed API directly to look up the thumbnail, and fetches the image from Vimeo's CDN — the same mechanism any website uses to embed a Vimeo preview. Nothing is sent to us because there's no backend to send it to.",
+  },
+  {
+    question: "Why doesn't Vimeo have fixed size names like 'HD' or '4K'?",
+    answer:
+      "Unlike YouTube, Vimeo doesn't publish a fixed set of named thumbnail resolutions. The available sizes depend on the resolution the video was originally uploaded at, so Zipizy asks for several target widths and shows whichever distinct sizes Vimeo actually returns, labeled by their real pixel dimensions.",
+  },
+  {
+    question:
+      "Why did I get an error for a video I can definitely see on Vimeo?",
+    answer:
+      "Some creators disable embedding, or set a video to private with domain restrictions — Vimeo's oEmbed service intentionally won't return a thumbnail for those, since it's the same system websites use to embed the video itself. Public, embeddable videos work normally.",
+  },
+  {
+    question: "Can I use a downloaded thumbnail in my own project?",
+    answer:
+      "The thumbnail is still the video creator's content, not public domain. It's fine to download one for personal reference, but check with the creator or Vimeo's terms before reusing one publicly.",
+  },
+];
+---
+
+<ToolLayout
+  title="Vimeo Thumbnail Downloader — All Sizes | Zipizy"
+  description="Download any public Vimeo video's thumbnail at every available size. Free, private, no sign-up required."
+  privacyNote="This tool needs internet access and requests thumbnails from the video provider. Your video URL or identifier is sent to that provider."
+  toolName="Vimeo Thumbnail Downloader"
+  intro="Get every available thumbnail size for a public Vimeo video — free, private, no sign-up required."
+  howTo={howTo}
+  faqs={faqs}
+>
+  <div class="vm-tool">
+    <div class="input-row">
+      <input
+        id="vm-input"
+        type="text"
+        placeholder="https://vimeo.com/... or a video ID"
+        spellcheck="false"
+        autocomplete="off"
+      />
+      <button id="vm-go" type="button" class="action-btn primary">
+        Find Thumbnails
+      </button>
+    </div>
+
+    <p id="vm-status" class="status error" hidden></p>
+
+    <div id="vm-grid" class="thumb-grid"></div>
+  </div>
+
+  <style>
+    .vm-tool {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+
+    #vm-input {
+      flex: 1;
+      min-width: 220px;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.6rem 0.75rem;
+      font-size: 0.95rem;
+    }
+
+    #vm-input:focus {
+      outline: 2px solid var(--color-primary);
+      outline-offset: -1px;
+    }
+
+    .action-btn {
+      background: var(--bg-primary);
+      color: var(--color-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.6rem 1.1rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    .action-btn.primary {
+      background: var(--color-accent);
+      color: var(--color-accent-contrast);
+      border: none;
+    }
+
+    .action-btn.primary:hover {
+      opacity: 0.9;
+    }
+
+    .status {
+      margin: 0;
+      font-size: 0.85rem;
+      padding: 0.6rem 0.75rem;
+      border-radius: var(--radius-sm);
+    }
+
+    .status.error {
+      color: var(--color-accent);
+      background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+    }
+
+    .thumb-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1rem;
+    }
+
+    :global(.thumb-card) {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 0.75rem;
+    }
+
+    :global(.thumb-card img) {
+      width: 100%;
+      border-radius: var(--radius-sm);
+      background: var(--bg-secondary);
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+    }
+
+    :global(.thumb-card .thumb-label) {
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    :global(.thumb-card .thumb-res) {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+
+    :global(.thumb-card .thumb-download) {
+      background: var(--bg-secondary);
+      color: var(--color-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.45rem 0.75rem;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    :global(.thumb-card .thumb-download:hover) {
+      border-color: var(--color-primary);
+    }
+  </style>
+
+  <script>
+    const TARGET_WIDTHS = [1920, 1280, 960, 640, 320];
+    const SIZE_LABELS = [
+      "Largest available",
+      "Large",
+      "Medium",
+      "Small",
+      "Smallest",
+    ];
+
+    const input = document.getElementById("vm-input") as HTMLInputElement;
+    const goBtn = document.getElementById("vm-go")!;
+    const status = document.getElementById("vm-status") as HTMLParagraphElement;
+    const grid = document.getElementById("vm-grid")!;
+
+    function normalizeInput(raw: string): string | null {
+      const trimmed = raw.trim();
+      if (/^\d+$/.test(trimmed)) return `https://vimeo.com/${trimmed}`;
+
+      try {
+        const url = new URL(trimmed);
+        const host = url.hostname.replace(/^www\./, "");
+        if (host === "vimeo.com" || host === "player.vimeo.com") return trimmed;
+      } catch {
+        return null;
+      }
+      return null;
+    }
+
+    function loadImage(
+      url: string,
+    ): Promise<{ width: number; height: number } | null> {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () =>
+          resolve({ width: img.naturalWidth, height: img.naturalHeight });
+        img.onerror = () => resolve(null);
+        img.src = url;
+      });
+    }
+
+    async function downloadThumb(url: string, filename: string) {
+      try {
+        const resp = await fetch(url);
+        const blob = await resp.blob();
+        const objectUrl = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = objectUrl;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(objectUrl);
+      } catch {
+        window.open(url, "_blank", "noopener");
+      }
+    }
+
+    function showError(message: string) {
+      status.textContent = message;
+      status.hidden = false;
+      grid.innerHTML = "";
+    }
+
+    async function fetchThumbnailUrl(
+      videoUrl: string,
+      width: number,
+    ): Promise<{ ok: true; url: string } | { ok: false; status: number }> {
+      const endpoint = `https://vimeo.com/api/oembed.json?url=${encodeURIComponent(videoUrl)}&width=${width}`;
+      try {
+        const resp = await fetch(endpoint);
+        if (!resp.ok) return { ok: false, status: resp.status };
+        const data = await resp.json();
+        if (typeof data.thumbnail_url !== "string")
+          return { ok: false, status: 0 };
+        return { ok: true, url: data.thumbnail_url };
+      } catch {
+        return { ok: false, status: -1 };
+      }
+    }
+
+    async function run() {
+      const videoUrl = normalizeInput(input.value);
+      if (!videoUrl) {
+        showError("Couldn't recognize a Vimeo URL or video ID in that input.");
+        return;
+      }
+
+      status.hidden = true;
+      grid.innerHTML = "";
+
+      const results = await Promise.all(
+        TARGET_WIDTHS.map((w) => fetchThumbnailUrl(videoUrl, w)),
+      );
+
+      const firstFailure = results.find((r) => !r.ok);
+      const anySuccess = results.some((r) => r.ok);
+
+      if (!anySuccess && firstFailure && !firstFailure.ok) {
+        if (firstFailure.status === 404) {
+          showError(
+            "Couldn't find a video with that URL or ID. Double-check the link and try again.",
+          );
+        } else if (firstFailure.status === 403) {
+          showError(
+            "This video is private or has embedding disabled, so its thumbnail isn't available.",
+          );
+        } else {
+          showError(
+            "Couldn't retrieve a thumbnail for that video. Double-check the link and try again.",
+          );
+        }
+        return;
+      }
+
+      const uniqueUrls = Array.from(
+        new Set(
+          results
+            .filter((r): r is { ok: true; url: string } => r.ok)
+            .map((r) => r.url),
+        ),
+      );
+
+      const withDims = await Promise.all(
+        uniqueUrls.map(async (url) => ({ url, dims: await loadImage(url) })),
+      );
+
+      const valid = withDims.filter(
+        (r): r is { url: string; dims: { width: number; height: number } } =>
+          r.dims !== null,
+      );
+      valid.sort(
+        (a, b) => b.dims.width * b.dims.height - a.dims.width * a.dims.height,
+      );
+
+      if (valid.length === 0) {
+        showError("Couldn't load a thumbnail image for that video.");
+        return;
+      }
+
+      valid.forEach((item, i) => {
+        const card = document.createElement("div");
+        card.className = "thumb-card";
+
+        const img = document.createElement("img");
+        img.src = item.url;
+        img.alt = `Vimeo thumbnail (${item.dims.width}x${item.dims.height})`;
+        img.loading = "lazy";
+
+        const label = document.createElement("span");
+        label.className = "thumb-label";
+        label.textContent = SIZE_LABELS[i] ?? `Option ${i + 1}`;
+
+        const res = document.createElement("span");
+        res.className = "thumb-res";
+        res.textContent = `${item.dims.width} × ${item.dims.height}`;
+
+        const downloadBtn = document.createElement("button");
+        downloadBtn.type = "button";
+        downloadBtn.className = "thumb-download";
+        downloadBtn.textContent = "Download";
+        downloadBtn.addEventListener("click", () => {
+          downloadThumb(
+            item.url,
+            `zipizy-vimeo-${item.dims.width}x${item.dims.height}.jpg`,
+          );
+        });
+
+        card.appendChild(img);
+        card.appendChild(label);
+        card.appendChild(res);
+        card.appendChild(downloadBtn);
+        grid.appendChild(card);
+      });
+    }
+
+    goBtn.addEventListener("click", run);
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") run();
+    });
+  </script>
+</ToolLayout>

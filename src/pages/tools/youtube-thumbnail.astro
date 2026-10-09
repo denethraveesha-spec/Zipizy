@@ -1,0 +1,349 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+
+const howTo = [
+  {
+    name: "Paste a video link",
+    text: "Paste any YouTube video, Shorts, or youtu.be link — or just the 11-character video ID.",
+  },
+  {
+    name: "Pick a resolution",
+    text: "Every thumbnail size available for that video appears automatically, from small to full HD.",
+  },
+  {
+    name: "Download",
+    text: "Click Download under any size to save it as a JPG to your device.",
+  },
+];
+
+const faqs = [
+  {
+    question: "Does this upload the video or my link to a server?",
+    answer:
+      "No. The video link is only used locally to work out the video ID and build a thumbnail URL — YouTube's own public thumbnail images are fetched directly by your browser. Nothing about your search is sent to Zipizy's servers, because there aren't any.",
+  },
+  {
+    question: "Why don't I see a 1280×720 (HD) option for some videos?",
+    answer:
+      "YouTube only generates a maxresdefault (1280×720) thumbnail for videos uploaded in HD, or for older videos if the creator's account has since re-processed them. Older or low-resolution uploads may only have the smaller sizes.",
+  },
+  {
+    question: "Can I use a downloaded thumbnail in my own project?",
+    answer:
+      "The thumbnail image itself is still the video creator's (or YouTube's) content, not public domain. It's fine to download one for personal reference, but check with the creator or review YouTube's terms before reusing one publicly — for example, in your own video, blog post, or app.",
+  },
+  {
+    question: "What video link formats are supported?",
+    answer:
+      "Standard watch links (youtube.com/watch?v=...), short links (youtu.be/...), Shorts links (youtube.com/shorts/...), embed links, and a bare 11-character video ID all work.",
+  },
+];
+---
+
+<ToolLayout
+  title="YouTube Thumbnail Downloader — All Resolutions | Zipizy"
+  description="Download any YouTube video's thumbnail in every available resolution, up to full HD. Free, private, no sign-up required."
+  privacyNote="This tool needs internet access and requests thumbnails from the video provider. Your video URL or identifier is sent to that provider."
+  toolName="YouTube Thumbnail Downloader"
+  intro="Get every thumbnail size for any YouTube video, up to full HD — free, private, no sign-up required."
+  howTo={howTo}
+  faqs={faqs}
+>
+  <div class="yt-tool">
+    <div class="input-row">
+      <input
+        id="yt-input"
+        type="text"
+        placeholder="https://www.youtube.com/watch?v=... or a video ID"
+        spellcheck="false"
+        autocomplete="off"
+      />
+      <button id="yt-go" type="button" class="action-btn primary">
+        Find Thumbnails
+      </button>
+    </div>
+
+    <p id="yt-status" class="status error" hidden></p>
+
+    <div id="yt-grid" class="thumb-grid"></div>
+  </div>
+
+  <style>
+    .yt-tool {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+
+    #yt-input {
+      flex: 1;
+      min-width: 220px;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.6rem 0.75rem;
+      font-size: 0.95rem;
+    }
+
+    #yt-input:focus {
+      outline: 2px solid var(--color-primary);
+      outline-offset: -1px;
+    }
+
+    .action-btn {
+      background: var(--bg-primary);
+      color: var(--color-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.6rem 1.1rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    .action-btn.primary {
+      background: var(--color-accent);
+      color: var(--color-accent-contrast);
+      border: none;
+    }
+
+    .action-btn.primary:hover {
+      opacity: 0.9;
+    }
+
+    .status {
+      margin: 0;
+      font-size: 0.85rem;
+      padding: 0.6rem 0.75rem;
+      border-radius: var(--radius-sm);
+    }
+
+    .status.error {
+      color: var(--color-accent);
+      background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+    }
+
+    .thumb-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1rem;
+    }
+
+    :global(.thumb-card) {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 0.75rem;
+    }
+
+    :global(.thumb-card img) {
+      width: 100%;
+      border-radius: var(--radius-sm);
+      background: var(--bg-secondary);
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+    }
+
+    :global(.thumb-card .thumb-label) {
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    :global(.thumb-card .thumb-res) {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+
+    :global(.thumb-card .thumb-download) {
+      background: var(--bg-secondary);
+      color: var(--color-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.45rem 0.75rem;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    :global(.thumb-card .thumb-download:hover) {
+      border-color: var(--color-primary);
+    }
+  </style>
+
+  <script>
+    interface ThumbSpec {
+      key: string;
+      label: string;
+      width: number;
+      height: number;
+    }
+
+    const THUMB_SPECS: ThumbSpec[] = [
+      {
+        key: "maxresdefault",
+        label: "Max resolution",
+        width: 1280,
+        height: 720,
+      },
+      { key: "sddefault", label: "Standard", width: 640, height: 480 },
+      { key: "hqdefault", label: "High quality", width: 480, height: 360 },
+      { key: "mqdefault", label: "Medium quality", width: 320, height: 180 },
+      { key: "default", label: "Default", width: 120, height: 90 },
+    ];
+
+    const PLACEHOLDER_WIDTH = 120;
+    const PLACEHOLDER_HEIGHT = 90;
+
+    const input = document.getElementById("yt-input") as HTMLInputElement;
+    const goBtn = document.getElementById("yt-go")!;
+    const status = document.getElementById("yt-status") as HTMLParagraphElement;
+    const grid = document.getElementById("yt-grid")!;
+
+    function extractVideoId(raw: string): string | null {
+      const trimmed = raw.trim();
+      if (/^[\w-]{11}$/.test(trimmed)) return trimmed;
+
+      let url: URL;
+      try {
+        url = new URL(trimmed);
+      } catch {
+        return null;
+      }
+
+      const host = url.hostname.replace(/^www\.|^m\./, "");
+
+      if (host === "youtu.be") {
+        const id = url.pathname.slice(1).split("/")[0];
+        return /^[\w-]{11}$/.test(id) ? id : null;
+      }
+
+      if (host === "youtube.com" || host === "youtube-nocookie.com") {
+        const v = url.searchParams.get("v");
+        if (v && /^[\w-]{11}$/.test(v)) return v;
+
+        const match = url.pathname.match(/\/(embed|shorts|live)\/([\w-]{11})/);
+        if (match) return match[2];
+      }
+
+      return null;
+    }
+
+    function checkImage(
+      url: string,
+    ): Promise<{ width: number; height: number } | null> {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () =>
+          resolve({ width: img.naturalWidth, height: img.naturalHeight });
+        img.onerror = () => resolve(null);
+        img.src = url;
+      });
+    }
+
+    async function downloadThumb(url: string, filename: string) {
+      try {
+        const resp = await fetch(url);
+        const blob = await resp.blob();
+        const objectUrl = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = objectUrl;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(objectUrl);
+      } catch {
+        window.open(url, "_blank", "noopener");
+      }
+    }
+
+    function showError(message: string) {
+      status.textContent = message;
+      status.hidden = false;
+      grid.innerHTML = "";
+    }
+
+    async function run() {
+      const videoId = extractVideoId(input.value);
+      if (!videoId) {
+        showError(
+          "Couldn't recognize a YouTube URL or video ID in that input.",
+        );
+        return;
+      }
+
+      status.hidden = true;
+      grid.innerHTML = "";
+
+      const hqCheck = await checkImage(
+        `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
+      );
+      if (
+        !hqCheck ||
+        (hqCheck.width === PLACEHOLDER_WIDTH &&
+          hqCheck.height === PLACEHOLDER_HEIGHT)
+      ) {
+        showError(
+          "Couldn't find a video with that URL or ID. Double-check the link and try again.",
+        );
+        return;
+      }
+
+      for (const spec of THUMB_SPECS) {
+        const url = `https://img.youtube.com/vi/${videoId}/${spec.key}.jpg`;
+        const dims = await checkImage(url);
+        if (!dims) continue;
+        if (
+          spec.key !== "default" &&
+          dims.width === PLACEHOLDER_WIDTH &&
+          dims.height === PLACEHOLDER_HEIGHT
+        ) {
+          continue;
+        }
+
+        const card = document.createElement("div");
+        card.className = "thumb-card";
+
+        const img = document.createElement("img");
+        img.src = url;
+        img.alt = `${spec.label} thumbnail`;
+        img.loading = "lazy";
+
+        const label = document.createElement("span");
+        label.className = "thumb-label";
+        label.textContent = spec.label;
+
+        const res = document.createElement("span");
+        res.className = "thumb-res";
+        res.textContent = `${dims.width} × ${dims.height}`;
+
+        const downloadBtn = document.createElement("button");
+        downloadBtn.type = "button";
+        downloadBtn.className = "thumb-download";
+        downloadBtn.textContent = "Download";
+        downloadBtn.addEventListener("click", () => {
+          downloadThumb(url, `zipizy-youtube-${videoId}-${spec.key}.jpg`);
+        });
+
+        card.appendChild(img);
+        card.appendChild(label);
+        card.appendChild(res);
+        card.appendChild(downloadBtn);
+        grid.appendChild(card);
+      }
+    }
+
+    goBtn.addEventListener("click", run);
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") run();
+    });
+  </script>
+</ToolLayout>

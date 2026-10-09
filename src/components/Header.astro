@@ -1,0 +1,102 @@
+---
+---
+
+<header class="site-header">
+  <a class="brand" href="/">
+    Zip<span>izy</span>
+  </a>
+  <nav>
+    <a href="/">All Tools</a>
+    <a href="/about">About</a>
+    <a
+      href="https://github.com/denethraveesha-spec/Zipizy"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      GitHub
+    </a>
+  </nav>
+  <button id="theme-toggle" type="button" aria-label="Toggle dark mode">
+    <span class="icon-light">☀</span>
+    <span class="icon-dark">☾</span>
+  </button>
+</header>
+
+<style>
+  .site-header {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .brand {
+    font-weight: 700;
+    font-size: 1.25rem;
+    color: var(--text-primary);
+    text-decoration: none;
+  }
+
+  .brand span {
+    color: var(--color-accent);
+  }
+
+  nav {
+    display: flex;
+    gap: 1rem;
+    margin-right: auto;
+  }
+
+  nav a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.95rem;
+  }
+
+  nav a:hover {
+    color: var(--color-primary);
+  }
+
+  #theme-toggle {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    width: 2.25rem;
+    height: 2.25rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+  }
+
+  .icon-dark {
+    display: none;
+  }
+
+  :global([data-theme="dark"]) .icon-light {
+    display: none;
+  }
+
+  :global([data-theme="dark"]) .icon-dark {
+    display: inline;
+  }
+</style>
+
+<script>
+  const toggle = document.getElementById("theme-toggle");
+  toggle?.addEventListener("click", () => {
+    const root = document.documentElement;
+    const current = root.getAttribute("data-theme");
+    const prefersDark = window.matchMedia(
+      "(prefers-color-scheme: dark)",
+    ).matches;
+    const isDark = current ? current === "dark" : prefersDark;
+    const next = isDark ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try {
+      localStorage.setItem("zipizy-theme", next);
+    } catch (e) {}
+  });
+</script>
